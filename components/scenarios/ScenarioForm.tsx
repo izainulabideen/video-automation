@@ -6,7 +6,8 @@ import type { Database } from '@/types/database'
 type Scenario = Database['public']['Tables']['scenarios']['Row']
 
 interface ScenarioFormProps {
-  action: (fd: FormData) => Promise<{ success: boolean; error?: string; data?: { id: string } }>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  action: (fd: FormData) => Promise<{ success: boolean; error?: string; data?: any }>
   defaultValues?: Partial<Scenario>
   submitLabel?: string
 }

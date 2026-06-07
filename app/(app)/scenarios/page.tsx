@@ -18,7 +18,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
     .from('scenarios')
     .select('id, title, niche, hook, status, created_at')
 
-  if (params.status) query = query.eq('status', params.status)
+  if (params.status) query = query.eq('status', params.status as 'draft' | 'in_production' | 'published')
   if (params.niche)  query = query.eq('niche', params.niche)
   if (params.q)      query = query.or(`title.ilike.%${params.q}%,hook.ilike.%${params.q}%`)
 

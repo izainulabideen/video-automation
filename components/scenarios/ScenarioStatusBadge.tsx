@@ -1,6 +1,5 @@
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import type { ScenarioStatus } from '@/types/app'
 
-export function ScenarioStatusBadge({ status }: { status: ScenarioStatus }) {
+export function ScenarioStatusBadge({ status }: { status: string }) {
   return <StatusBadge status={status} />
 }

@@ -18,7 +18,7 @@ export async function upsertVideo(scenarioId: string, fd: FormData): Promise<Act
   const { error } = await supabase.from('videos').upsert({
     scenario_id:  scenarioId,
     file_url:     (fd.get('file_url')    as string) || null,
-    status:       (fd.get('status')      as string) || 'editing',
+    status:       ((fd.get('status') as string) || 'editing') as 'editing' | 'exported' | 'published',
     duration_sec: Number(fd.get('duration_sec') ?? 0) || null,
     publish_date: (fd.get('publish_date') as string) || null,
     notes:        (fd.get('notes')        as string) || null,

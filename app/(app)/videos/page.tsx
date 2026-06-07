@@ -17,7 +17,7 @@ export default async function VideosPage({ searchParams }: Props) {
     .select('id, file_url, platform_urls, duration_sec, status, publish_date, performance, notes, scenario_id, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(50)
-  if (params.status) query = query.eq('status', params.status)
+  if (params.status) query = query.eq('status', params.status as 'editing' | 'exported' | 'published')
 
   const { data: videos } = await query
 
