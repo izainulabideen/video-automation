@@ -10,8 +10,7 @@ const config: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {
-    ppr: true,
-    reactCompiler: true,
+    cacheComponents: true,
   },
 };
 
