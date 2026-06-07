@@ -1,10 +1,10 @@
 'use server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 
 export async function upsertVideo(scenarioId: string, fd: FormData): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const platform_urls = {
     tiktok:   (fd.get('tiktok')   as string) || null,
     youtube:  (fd.get('youtube')  as string) || null,

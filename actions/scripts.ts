@@ -1,10 +1,10 @@
 'use server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 
 export async function upsertScript(scenarioId: string, fd: FormData): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const body = fd.get('body') as string
   if (!body) return { success: false, error: 'Script body is required' }
   const wordCount = body.trim().split(/\s+/).length

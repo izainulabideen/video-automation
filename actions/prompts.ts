@@ -1,10 +1,10 @@
 'use server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 
 export async function createPrompt(fd: FormData): Promise<ActionResult<{ id: string }>> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const scenario_id  = fd.get('scenario_id')  as string
   const scene_type   = fd.get('scene_type')   as string
   const prompt_text  = fd.get('prompt_text')  as string
@@ -22,7 +22,7 @@ export async function createPrompt(fd: FormData): Promise<ActionResult<{ id: str
 }
 
 export async function updatePrompt(id: string, fd: FormData): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const scenario_id = fd.get('scenario_id') as string
   const { error } = await supabase.from('prompts').update({
     scene_type:   (fd.get('scene_type')   as string) || undefined,
@@ -37,7 +37,7 @@ export async function updatePrompt(id: string, fd: FormData): Promise<ActionResu
 }
 
 export async function deletePrompt(id: string, scenarioId: string): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('prompts').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
   revalidatePath(`/scenarios/${scenarioId}/prompts`)
@@ -46,7 +46,7 @@ export async function deletePrompt(id: string, scenarioId: string): Promise<Acti
 }
 
 export async function reorderPrompts(ids: string[], scenarioId: string): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const updates = ids.map((id, index) =>
     supabase.from('prompts').update({ sort_order: index }).eq('id', id)
   )

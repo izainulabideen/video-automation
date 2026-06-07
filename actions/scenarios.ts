@@ -1,10 +1,10 @@
 'use server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 
 export async function createScenario(fd: FormData): Promise<ActionResult<{ id: string }>> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const title = fd.get('title') as string
   const niche = fd.get('niche') as string
   const hook  = fd.get('hook')  as string
@@ -26,7 +26,7 @@ export async function createScenario(fd: FormData): Promise<ActionResult<{ id: s
 }
 
 export async function updateScenario(id: string, fd: FormData): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('scenarios').update({
     title:    (fd.get('title')    as string) || undefined,
     niche:    (fd.get('niche')    as string) || undefined,
@@ -45,7 +45,7 @@ export async function updateScenario(id: string, fd: FormData): Promise<ActionRe
 export async function updateScenarioStatus(
   id: string, status: 'draft' | 'in_production' | 'published'
 ): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('scenarios').update({ status }).eq('id', id)
   if (error) return { success: false, error: error.message }
   revalidatePath(`/scenarios/${id}`)
@@ -54,7 +54,7 @@ export async function updateScenarioStatus(
 }
 
 export async function deleteScenario(id: string): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('scenarios').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
   revalidatePath('/scenarios')

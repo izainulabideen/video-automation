@@ -1,5 +1,5 @@
 'use server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 
@@ -11,7 +11,7 @@ export async function createGraphicRecord(params: {
   sceneType?: string
   captionWord?: string
 }): Promise<ActionResult<{ id: string }>> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase.from('graphics').insert({
     scenario_id:  params.scenarioId,
     file_url:     params.fileUrl,
@@ -27,7 +27,7 @@ export async function createGraphicRecord(params: {
 }
 
 export async function deleteGraphic(id: string, scenarioId: string): Promise<ActionResult> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from('graphics').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
   revalidatePath(`/scenarios/${scenarioId}/graphics`)
