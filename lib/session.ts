@@ -3,43 +3,52 @@ import { cookies } from 'next/headers'
 export const SESSION_COOKIE = 'veank_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
+export interface SessionPayload {
+  userId: string
+  email: string
+  name: string
+  role: string
+}
+
 async function getKey(): Promise<CryptoKey> {
   const secret = process.env.SESSION_SECRET
   if (!secret) throw new Error('SESSION_SECRET env var is not set')
-  const enc = new TextEncoder()
   return crypto.subtle.importKey(
     'raw',
-    enc.encode(secret.padEnd(32, '0').slice(0, 32)),
+    new TextEncoder().encode(secret.padEnd(32, '0').slice(0, 32)),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify']
   )
 }
 
-export async function createSessionToken(): Promise<string> {
+export async function createSessionToken(payload: SessionPayload): Promise<string> {
   const key = await getKey()
-  const payload = `veank:${Date.now()}`
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload))
+  const data = JSON.stringify(payload)
+  const encoded = Buffer.from(data).toString('base64url')
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(encoded))
   const sigHex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
-  return `${payload}.${sigHex}`
+  return `${encoded}.${sigHex}`
 }
 
-export async function verifySessionToken(token: string): Promise<boolean> {
+export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const lastDot = token.lastIndexOf('.')
-    if (lastDot === -1) return false
-    const payload = token.slice(0, lastDot)
+    if (lastDot === -1) return null
+    const encoded = token.slice(0, lastDot)
     const sigHex = token.slice(lastDot + 1)
     const key = await getKey()
     const sigBytes = new Uint8Array(sigHex.match(/.{2}/g)!.map(h => parseInt(h, 16)))
-    return crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(payload))
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(encoded))
+    if (!valid) return null
+    return JSON.parse(Buffer.from(encoded, 'base64url').toString()) as SessionPayload
   } catch {
-    return false
+    return null
   }
 }
 
-export async function setSession() {
-  const token = await createSessionToken()
+export async function setSession(payload: SessionPayload) {
+  const token = await createSessionToken(payload)
   const cookieStore = await cookies()
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -48,6 +57,13 @@ export async function setSession() {
     maxAge: COOKIE_MAX_AGE,
     path: '/',
   })
+}
+
+export async function getSession(): Promise<SessionPayload | null> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get(SESSION_COOKIE)?.value
+  if (!token) return null
+  return verifySessionToken(token)
 }
 
 export async function clearSession() {

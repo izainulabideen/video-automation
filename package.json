@@ -16,11 +16,13 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
     "geist": "^1.7.2",
     "lucide-react": "^1.17.0",
     "next": "^16.2.7",
+    "nodemailer": "^8.0.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-dropzone": "^15.0.0",
@@ -29,7 +31,9 @@
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25.9.2",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^10.4.1",

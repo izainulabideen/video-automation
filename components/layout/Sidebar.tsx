@@ -1,16 +1,17 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Film, FileText, Image, Video, Wand2 } from 'lucide-react'
+import { LayoutDashboard, Film, FileText, Image, Video, Wand2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/scenarios',  label: 'Scenarios',  icon: Film },
-  { href: '/prompts',    label: 'Prompts',    icon: Wand2 },
-  { href: '/scripts',    label: 'Scripts',    icon: FileText },
-  { href: '/graphics',   label: 'Graphics',   icon: Image },
-  { href: '/videos',     label: 'Videos',     icon: Video },
+  { href: '/dashboard',     label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/scenarios',     label: 'Scenarios', icon: Film },
+  { href: '/prompts',       label: 'Prompts',   icon: Wand2 },
+  { href: '/scripts',       label: 'Scripts',   icon: FileText },
+  { href: '/graphics',      label: 'Graphics',  icon: Image },
+  { href: '/videos',        label: 'Videos',    icon: Video },
+  { href: '/settings/team', label: 'Team',      icon: Users },
 ]
 
 export function Sidebar() {
@@ -27,9 +28,7 @@ export function Sidebar() {
             href={href}
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-brand-100 transition-colors',
-              pathname.startsWith(href) && href !== '/dashboard'
-                ? 'bg-accent/10 text-accent'
-                : pathname === href && href === '/dashboard'
+              pathname === href || (pathname.startsWith(href) && href !== '/dashboard')
                 ? 'bg-accent/10 text-accent'
                 : 'text-brand-700'
             )}
