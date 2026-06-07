@@ -19,7 +19,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-56 flex-col bg-white border-r border-brand-300 py-6 px-3 shrink-0">
       <div className="px-3 mb-6">
-        <span className="text-sm font-semibold text-brand-900">Veank Content OS</span>
+        <span className="text-sm font-semibold text-brand-900">Veank Studio</span>
       </div>
       <nav className="flex flex-col gap-1">
         {nav.map(({ href, label, icon: Icon }) => (

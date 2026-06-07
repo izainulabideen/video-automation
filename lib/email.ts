@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-const FROM = `Veank Content OS <${process.env.SMTP_USER}>`
+const FROM = `Veank Studio <${process.env.SMTP_USER}>`
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export async function sendPasswordResetEmail(email: string, token: string) {
@@ -18,7 +18,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   await transporter.sendMail({
     from: FROM,
     to: email,
-    subject: 'Reset your Veank Content OS password',
+    subject: 'Reset your Veank Studio password',
     html: `
       <p>You requested a password reset.</p>
       <p><a href="${url}">Click here to reset your password</a></p>
@@ -32,9 +32,9 @@ export async function sendInviteEmail(email: string, token: string, inviterName:
   await transporter.sendMail({
     from: FROM,
     to: email,
-    subject: `${inviterName} invited you to Veank Content OS`,
+    subject: `${inviterName} invited you to Veank Studio`,
     html: `
-      <p>${inviterName} has invited you to join Veank Content OS.</p>
+      <p>${inviterName} has invited you to join Veank Studio.</p>
       <p><a href="${url}">Accept invitation and set your password</a></p>
       <p>This link expires in 48 hours.</p>
     `,

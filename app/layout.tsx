@@ -4,7 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Veank Content OS',
+  title: 'Veank Studio',
   description: 'Finance content automation platform',
 }
 
