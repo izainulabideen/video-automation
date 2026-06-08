@@ -25,7 +25,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
 
   let query = supabase
     .from('scenarios')
-    .select('id, title, niche, hook, status, created_at, assigned_to, due_date')
+    .select('id, title, niche, hook, status, created_at')
 
   if (view !== 'kanban') {
     if (params.status) query = query.eq('status', params.status as never)
@@ -38,11 +38,12 @@ export default async function ScenariosPage({ searchParams }: Props) {
   else                               query = query.order('created_at', { ascending: false })
 
   const { data: allScenarios } = await query.limit(500)
-  const totalCount = allScenarios?.length ?? 0
+  const allList    = allScenarios ?? []
+  const totalCount = allList.length
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const scenarios  = view === 'kanban'
-    ? allScenarios
-    : allScenarios?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    ? allList
+    : allList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div>
@@ -64,8 +65,8 @@ export default async function ScenariosPage({ searchParams }: Props) {
       {view !== 'kanban' && <ScenariosFilters />}
 
       {view === 'kanban' ? (
-        <KanbanBoard scenarios={(scenarios ?? []) as never[]} />
-      ) : !scenarios?.length ? (
+        <KanbanBoard scenarios={scenarios as never[]} />
+      ) : !scenarios.length ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-14 h-14 rounded-xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mb-4">
             <Film size={22} className="text-brand-500" />
