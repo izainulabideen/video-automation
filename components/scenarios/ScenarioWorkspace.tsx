@@ -9,6 +9,7 @@ import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
 import { SortableMedia } from '@/components/scenarios/SortableMedia'
+import { AIGeneratePanel } from '@/components/scenarios/AIGeneratePanel'
 import { useDropzone } from 'react-dropzone'
 import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus } from 'lucide-react'
 import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
@@ -204,6 +205,13 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
 
   return (
     <div className="mt-4">
+
+      {/* AI Generate */}
+      <AIGeneratePanel
+        scenario={scenario}
+        currentScript={scriptBody}
+        existingPromptCount={prompts.length}
+      />
 
       {/* Details */}
       <Section title="Details">
