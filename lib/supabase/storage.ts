@@ -1,10 +1,10 @@
-import { createServerClient } from './server'
+import { createAdminClient } from './admin'
 
 export async function getPresignedUploadUrl(
   bucket: string,
   path: string,
 ): Promise<{ uploadUrl: string; fileUrl: string } | { error: string }> {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data, error } = await supabase.storage
     .from(bucket)
     .createSignedUploadUrl(path)
@@ -14,7 +14,7 @@ export async function getPresignedUploadUrl(
 }
 
 export async function deleteStorageFile(bucket: string, path: string) {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.storage.from(bucket).remove([path])
   return error ? { error: error.message } : { success: true }
 }
