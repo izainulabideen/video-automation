@@ -46,6 +46,19 @@ export const NICHE_LABELS: Record<string, string> = {
   other:             'Other',
 }
 
+export const NICHE_COLORS: Record<string, string> = {
+  wealth_secrets:    'text-amber-400',
+  career_money:      'text-sky-400',
+  money_psychology:  'text-violet-400',
+  tech_careers:      'text-cyan-400',
+  wall_street:       'text-emerald-400',
+  legal_finance:     'text-rose-400',
+  real_estate:       'text-orange-400',
+  investing:         'text-green-400',
+  tax_strategy:      'text-yellow-400',
+  other:             'text-white/40',
+}
+
 export const STATUS_OPTIONS = [
   { value: 'draft',         label: 'Draft' },
   { value: 'in_production', label: 'In Production' },

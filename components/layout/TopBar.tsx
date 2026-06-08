@@ -1,5 +1,6 @@
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { getSession } from '@/lib/session'
+import { MobileNav } from '@/components/layout/MobileNav'
 
 export async function TopBar() {
   const session = await getSession()
@@ -10,14 +11,17 @@ export async function TopBar() {
 
   return (
     <header className="bg-[#0A0E18] border-b border-white/[0.06] px-5 py-3 flex items-center justify-between shrink-0">
-      {/* Mobile logo placeholder */}
-      <div className="md:hidden flex items-center gap-2">
-        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-h flex items-center justify-center">
-          <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-            <path d="M2 3.5L7 2L12 3.5V7C12 9.8 9.8 12.3 7 13C4.2 12.3 2 9.8 2 7V3.5Z" fill="white" fillOpacity="0.9"/>
-          </svg>
+      {/* Mobile: hamburger + logo */}
+      <div className="md:hidden flex items-center gap-2.5">
+        <MobileNav />
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-h flex items-center justify-center">
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+              <path d="M2 3.5L7 2L12 3.5V7C12 9.8 9.8 12.3 7 13C4.2 12.3 2 9.8 2 7V3.5Z" fill="white" fillOpacity="0.9"/>
+            </svg>
+          </div>
+          <span className="text-[13px] font-bold text-white">Veank Studio</span>
         </div>
-        <span className="text-[13px] font-bold text-white">Veank Studio</span>
       </div>
 
       <div className="hidden md:block" />
