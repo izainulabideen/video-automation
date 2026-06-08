@@ -7,6 +7,7 @@ import { ScenarioChecklist } from '@/components/scenarios/ScenarioChecklist'
 import { ActivityLogView } from '@/components/scenarios/ActivityLog'
 import { CommentsPanel } from '@/components/scenarios/CommentsPanel'
 import { AssignmentWidget } from '@/components/scenarios/AssignmentWidget'
+import { ExportPanel } from '@/components/scenarios/ExportPanel'
 import { formatDate } from '@/lib/utils'
 import type { PublicSettings } from '@/actions/public-settings'
 import { NICHE_LABELS } from '@/lib/constants'
@@ -175,6 +176,9 @@ export default async function ScenarioDetailPage({ params }: Props) {
               />
             </div>
           </div>
+
+          {/* Export */}
+          <ExportPanel scenarioId={id} title={scenario.title ?? id} />
 
           {/* Activity log */}
           <div className="bg-[#0D1117] rounded-xl border border-white/[0.07] overflow-hidden">
