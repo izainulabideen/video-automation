@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   }
   const ext = fileName.split('.').pop()
   const path = `${scenarioId}/${Date.now()}.${ext}`
-  const result = await getPresignedUploadUrl('graphics', path)
+  const result = await getPresignedUploadUrl('storage', path)
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: 500 })
   return NextResponse.json(result)
 }
