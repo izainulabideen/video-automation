@@ -2,9 +2,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
+import { logActivity } from './activity'
+import { getSession } from '@/lib/session'
 
 export async function createPrompt(fd: FormData): Promise<ActionResult<{ id: string }>> {
   const supabase = createAdminClient()
+  const session = await getSession()
   const scenario_id  = fd.get('scenario_id')  as string
   const scene_type   = fd.get('scene_type')   as string
   const prompt_text  = fd.get('prompt_text')  as string
@@ -16,6 +19,7 @@ export async function createPrompt(fd: FormData): Promise<ActionResult<{ id: str
     sort_order: Number(fd.get('sort_order') ?? 0),
   }).select('id').single()
   if (error) return { success: false, error: error.message }
+  await logActivity(scenario_id, session?.name ?? 'Unknown', `Added prompt: ${scene_type}`, ai_tool)
   revalidatePath(`/scenarios/${scenario_id}/prompts`)
   revalidatePath('/prompts')
   return { success: true, data: { id: data.id } }

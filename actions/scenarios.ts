@@ -2,6 +2,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
+import { logActivity } from './activity'
+import { getSession } from '@/lib/session'
 
 export async function createScenario(fd: FormData): Promise<ActionResult<{ id: string }>> {
   const supabase = createAdminClient()
@@ -46,8 +48,10 @@ export async function updateScenarioStatus(
   id: string, status: 'draft' | 'in_production' | 'published'
 ): Promise<ActionResult> {
   const supabase = createAdminClient()
+  const session = await getSession()
   const { error } = await supabase.from('scenarios').update({ status }).eq('id', id)
   if (error) return { success: false, error: error.message }
+  await logActivity(id, session?.name ?? 'Unknown', `Status changed to ${status}`)
   revalidatePath(`/scenarios/${id}`)
   revalidatePath('/scenarios')
   return { success: true, data: undefined }

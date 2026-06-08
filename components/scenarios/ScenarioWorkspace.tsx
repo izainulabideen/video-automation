@@ -8,8 +8,9 @@ import { createPrompt } from '@/actions/prompts'
 import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
+import { SortableMedia } from '@/components/scenarios/SortableMedia'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp, Film, ImageIcon, Globe, ExternalLink, Upload, Plus } from 'lucide-react'
+import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus } from 'lucide-react'
 import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
@@ -20,7 +21,7 @@ type Graphic  = Database['public']['Tables']['graphics']['Row'] & { media_type?:
 type Video    = Database['public']['Tables']['videos']['Row']
 
 interface Props {
-  scenario:       Scenario
+  scenario:       Scenario & { cover_graphic_id?: string | null }
   prompts:        Prompt[]
   script?:        Script
   graphics:       Graphic[]
@@ -87,31 +88,6 @@ function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void;
   )
 }
 
-function MediaThumbnail({ g }: { g: Graphic }) {
-  const isClip = g.media_type === 'clip' || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i)
-  return (
-    <a href={g.file_url} target="_blank" rel="noreferrer" className="relative group block">
-      {isClip ? (
-        <div className="rounded-lg aspect-square bg-[#161B27] border border-white/[0.08] flex flex-col items-center justify-center gap-1 hover:opacity-80 transition overflow-hidden relative">
-          <video src={g.file_url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
-          <div className="relative z-10 flex flex-col items-center">
-            <Film size={18} className="text-white" />
-            {g.clip_duration_sec && (
-              <span className="text-white text-xs font-mono mt-1">{g.clip_duration_sec}s</span>
-            )}
-          </div>
-        </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={g.file_url} alt={g.file_name}
-          className="rounded-lg aspect-square object-cover w-full border border-white/[0.08] hover:opacity-80 transition" />
-      )}
-      <span className="absolute bottom-1 left-1 right-1 text-center text-xs text-white/80 truncate opacity-0 group-hover:opacity-100 transition bg-black/50 rounded px-1 py-0.5">
-        {g.file_name}
-      </span>
-    </a>
-  )
-}
 
 export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings }: Props) {
   const router = useRouter()
@@ -225,9 +201,6 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
     setVideoSaving(false)
     router.refresh()
   }
-
-  const images = graphics.filter(g => g.media_type !== 'clip' && !g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
-  const clips  = graphics.filter(g => g.media_type === 'clip'  || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
 
   return (
     <div className="mt-4">
@@ -451,9 +424,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
         title="Media"
         defaultOpen={false}
         badge={
-          <span className="text-[11px] text-brand-500">
-            {images.length} image{images.length !== 1 ? 's' : ''} · {clips.length} clip{clips.length !== 1 ? 's' : ''}
-          </span>
+          <span className="text-[11px] text-brand-500">{graphics.length} file{graphics.length !== 1 ? 's' : ''}</span>
         }
       >
         <div className="pt-4">
@@ -472,26 +443,18 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
             <p className="text-[11px] text-brand-600">JPG, PNG, GIF, MP4, MOV, WEBM · click to browse</p>
           </div>
 
-          {images.length > 0 && (
-            <div className="mb-4">
-              <p className="flex items-center gap-1.5 text-[11px] text-brand-500 uppercase tracking-wider mb-2.5">
-                <ImageIcon size={11} /> Images ({images.length})
-              </p>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                {images.map(g => <MediaThumbnail key={g.id} g={g} />)}
-              </div>
-            </div>
-          )}
-
-          {clips.length > 0 && (
-            <div>
-              <p className="flex items-center gap-1.5 text-[11px] text-brand-500 uppercase tracking-wider mb-2.5">
-                <Film size={11} /> Clips ({clips.length})
-              </p>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                {clips.map(g => <MediaThumbnail key={g.id} g={g} />)}
-              </div>
-            </div>
+          {graphics.length > 0 && (
+            <SortableMedia
+              scenarioId={id}
+              items={graphics.map(g => ({
+                id: g.id,
+                file_url: g.file_url,
+                file_name: g.file_name,
+                media_type: g.media_type,
+                sort_order: g.sort_order,
+              }))}
+              coverGraphicId={scenario.cover_graphic_id ?? null}
+            />
           )}
         </div>
       </Section>
