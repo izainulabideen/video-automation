@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
+import { ScenariosFilters } from '@/components/scenarios/ScenariosFilters'
 import { formatDate } from '@/lib/utils'
-import { Plus, Search, Film } from 'lucide-react'
+import { Plus, Film } from 'lucide-react'
 import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
 
 export const revalidate = 60
@@ -29,31 +30,6 @@ export default async function ScenariosPage({ searchParams }: Props) {
 
   const { data: scenarios } = await query.limit(50)
 
-  // Build sort URLs preserving existing status/q params
-  function sortUrl(col: string) {
-    const sp = new URLSearchParams()
-    if (params.status) sp.set('status', params.status)
-    if (params.q)      sp.set('q', params.q)
-    sp.set('sort', col)
-    return `/scenarios?${sp.toString()}`
-  }
-
-  const sortColumns = [
-    { key: 'created_at', label: 'Date ↓' },
-    { key: 'title',      label: 'Title' },
-    { key: 'status',     label: 'Status' },
-    { key: 'niche',      label: 'Niche' },
-  ]
-
-  const activeSort = params.sort ?? 'created_at'
-
-  const statuses = [
-    { value: '',              label: 'All' },
-    { value: 'draft',         label: 'Draft' },
-    { value: 'in_production', label: 'In Production' },
-    { value: 'published',     label: 'Published' },
-  ]
-
   return (
     <div>
       {/* Header */}
@@ -69,52 +45,8 @@ export default async function ScenariosPage({ searchParams }: Props) {
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
-        {statuses.map(s => (
-          <Link key={s.value}
-            href={`/scenarios${s.value ? `?status=${s.value}` : ''}`}
-            className={`text-[12px] px-3.5 py-1.5 rounded-full border transition-all ${
-              (params.status ?? '') === s.value
-                ? 'bg-accent/15 text-accent border-accent/30 font-medium'
-                : 'border-white/[0.08] text-brand-400 hover:bg-white/[0.04] hover:text-brand-200'
-            }`}>
-            {s.label}
-          </Link>
-        ))}
-        <form className="ml-auto">
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-500" />
-            <input
-              name="q"
-              defaultValue={params.q ?? ''}
-              placeholder="Search stories…"
-              className="bg-white/[0.04] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-[12px] text-brand-200 placeholder-brand-500 w-48 focus:border-accent/40 focus:bg-white/[0.06] transition-all"
-            />
-          </div>
-        </form>
-      </div>
-
-      {/* Sort bar */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <span className="text-[11px] text-brand-500 mr-1">Sort by:</span>
-        {sortColumns.map(col => (
-          <Link
-            key={col.key}
-            href={col.key === 'created_at'
-              ? (() => { const sp = new URLSearchParams(); if (params.status) sp.set('status', params.status); if (params.q) sp.set('q', params.q); const s = sp.toString(); return `/scenarios${s ? `?${s}` : ''}`; })()
-              : sortUrl(col.key)
-            }
-            className={`text-[11px] px-3 py-1 rounded-full border transition-all ${
-              activeSort === col.key
-                ? 'text-accent border-accent/30 bg-accent/10 font-medium'
-                : 'text-brand-500 border-white/[0.06] hover:border-white/[0.1] hover:text-brand-300'
-            }`}
-          >
-            {col.label}
-          </Link>
-        ))}
-      </div>
+      {/* Client-side filters + sort (no scroll-to-top) */}
+      <ScenariosFilters />
 
       {/* List */}
       {!scenarios?.length ? (
@@ -134,7 +66,6 @@ export default async function ScenariosPage({ searchParams }: Props) {
               href={`/scenarios/${s.id}`}
               className={`flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-colors group ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}
             >
-              {/* Status dot */}
               <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                 s.status === 'published' ? 'bg-success' :
                 s.status === 'in_production' ? 'bg-warning' : 'bg-brand-500'

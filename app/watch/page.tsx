@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
+import { WatchFilters } from '@/components/watch/WatchFilters'
 
 export const revalidate = 300
 
@@ -65,7 +66,8 @@ export default async function WatchPage({ searchParams }: Props) {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, backgroundSize: '200px 200px' }} />
 
       {/* ── Nav ── */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-8 py-5 mix-blend-normal">
+      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-8 py-4 backdrop-blur-xl border-b border-white/[0.04] transition-all"
+        style={{ background: 'rgba(6,8,15,0.8)' }}>
         <div className="flex items-center gap-3">
           <div className="w-6 h-6 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
             <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
@@ -116,49 +118,11 @@ export default async function WatchPage({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ── Filter bar ── */}
-      <div className="flex flex-wrap items-center gap-2 px-6 pb-8 max-w-7xl mx-auto">
-        {/* Niche pills */}
-        <Link
-          href="/watch"
-          className={`text-[11px] px-3.5 py-1.5 rounded-full border transition-all ${
-            !params.niche
-              ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
-              : 'text-white/30 border border-white/[0.06] hover:border-white/[0.1]'
-          }`}
-        >
-          All
-        </Link>
-        {allNiches.map(niche => (
-          <Link
-            key={niche}
-            href={`/watch?niche=${niche}`}
-            className={`text-[11px] px-3.5 py-1.5 rounded-full border transition-all ${
-              params.niche === niche
-                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
-                : 'text-white/30 border border-white/[0.06] hover:border-white/[0.1]'
-            }`}
-          >
-            {NICHE_LABELS[niche] ?? niche}
-          </Link>
-        ))}
-
-        {/* Search */}
-        <form className="ml-auto" method="get" action="/watch">
-          {params.niche && (
-            <input type="hidden" name="niche" value={params.niche} />
-          )}
-          <input
-            name="q"
-            defaultValue={params.q ?? ''}
-            placeholder="Search stories…"
-            className="bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-1.5 text-[12px] text-white/60 placeholder-white/20 w-44 focus:outline-none focus:border-white/[0.15] focus:bg-white/[0.06] transition-all"
-          />
-        </form>
-      </div>
+      {/* ── Sticky filter bar ── */}
+      <WatchFilters allNiches={allNiches} />
 
       {/* ── Published content ── */}
-      <section className="max-w-7xl mx-auto px-6 pb-8">
+      <section className="max-w-7xl mx-auto px-6 pt-10 pb-8">
         {!scenarios.length ? (
           <div className="flex flex-col items-center justify-center py-40 gap-4">
             <div className="w-16 h-16 rounded-2xl border border-white/[0.06] flex items-center justify-center">
