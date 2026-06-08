@@ -3,7 +3,7 @@ import { TopBar } from '@/components/layout/TopBar'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-brand-50">
+    <div className="flex h-screen overflow-hidden bg-[#080B14]">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar />

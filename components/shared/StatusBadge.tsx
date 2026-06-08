@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils'
 
 const styles: Record<string, string> = {
-  draft:         'bg-brand-100 text-brand-700',
-  in_production: 'bg-yellow-100 text-yellow-800',
-  published:     'bg-green-100 text-green-800',
-  editing:       'bg-blue-100 text-blue-800',
-  exported:      'bg-purple-100 text-purple-800',
+  draft:         'bg-white/[0.05] text-brand-300 border border-white/[0.08]',
+  in_production: 'bg-warning/10 text-warning border border-warning/20',
+  published:     'bg-success/10 text-success border border-success/20',
+  editing:       'bg-info/10 text-info border border-info/20',
+  exported:      'bg-accent/10 text-accent border border-accent/20',
 }
 
 const labels: Record<string, string> = {
@@ -19,8 +19,8 @@ const labels: Record<string, string> = {
 export function StatusBadge({ status }: { status: string }) {
   return (
     <span className={cn(
-      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-      styles[status] ?? 'bg-brand-100 text-brand-700'
+      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium',
+      styles[status] ?? 'bg-white/[0.05] text-brand-300 border border-white/[0.08]'
     )}>
       {labels[status] ?? status}
     </span>

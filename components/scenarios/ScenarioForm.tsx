@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { NICHES, PALETTES, STATUS_OPTIONS } from '@/lib/constants'
+import { NICHES, NICHE_LABELS, PALETTES, STATUS_OPTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
@@ -12,6 +12,9 @@ interface ScenarioFormProps {
   submitLabel?: string
 }
 
+const labelCls = 'block text-[11px] font-semibold text-brand-300 uppercase tracking-wider mb-1.5'
+const inputCls = 'w-full bg-white/[0.04] border border-white/[0.09] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-brand-500 focus:border-accent/50 focus:bg-white/[0.06] transition-all'
+
 export function ScenarioForm({ action, defaultValues, submitLabel = 'Save' }: ScenarioFormProps) {
   const router = useRouter()
   async function handleSubmit(fd: FormData) {
@@ -20,51 +23,68 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save' }: Sc
     else if (result.success) router.push('/scenarios')
   }
   return (
-    <form action={handleSubmit} className="space-y-4 max-w-xl">
-      {[
-        { name: 'title', label: 'Title', required: true },
-        { name: 'hook',  label: 'Hook',  required: true },
-      ].map(f => (
-        <div key={f.name}>
-          <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</label>
-          <input name={f.name} required={f.required} defaultValue={defaultValues?.[f.name as keyof Scenario] as string ?? ''}
-            className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
+    <form action={handleSubmit} className="space-y-5 max-w-2xl">
+      {/* Title + Niche row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <label className={labelCls}>Title</label>
+          <input name="title" required defaultValue={defaultValues?.title ?? ''}
+            placeholder="e.g. The Hidden Tax Trap Most Earners Miss"
+            className={inputCls} />
         </div>
-      ))}
-      <div>
-        <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Niche</label>
-        <select name="niche" required defaultValue={defaultValues?.niche ?? ''}
-          className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none">
-          <option value="" disabled>Select niche</option>
-          {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
-      </div>
-      {[
-        { name: 'audience', label: 'Audience' },
-        { name: 'emotion',  label: 'Emotion' },
-      ].map(f => (
-        <div key={f.name}>
-          <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</label>
-          <input name={f.name} defaultValue={defaultValues?.[f.name as keyof Scenario] as string ?? ''}
-            className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
+        <div className="sm:col-span-2">
+          <label className={labelCls}>Hook</label>
+          <input name="hook" required defaultValue={defaultValues?.hook ?? ''}
+            placeholder="One compelling sentence to hook the viewer"
+            className={inputCls} />
         </div>
-      ))}
-      <div>
-        <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Palette</label>
-        <select name="palette" defaultValue={defaultValues?.palette ?? ''}
-          className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none">
-          <option value="">Select palette</option>
-          {PALETTES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-        </select>
+        <div>
+          <label className={labelCls}>Niche</label>
+          <select name="niche" required defaultValue={defaultValues?.niche ?? ''}
+            className={inputCls}>
+            <option value="" disabled className="bg-[#111827]">Select niche</option>
+            {NICHES.map(n => (
+              <option key={n} value={n} className="bg-[#111827]">{NICHE_LABELS[n] ?? n}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Palette</label>
+          <select name="palette" defaultValue={defaultValues?.palette ?? ''}
+            className={inputCls}>
+            <option value="" className="bg-[#111827]">Select palette</option>
+            {PALETTES.map(p => (
+              <option key={p.value} value={p.value} className="bg-[#111827]">{p.label} — {p.use}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Target Audience</label>
+          <input name="audience" defaultValue={defaultValues?.audience ?? ''}
+            placeholder="e.g. 25-40 yr earners"
+            className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Emotion</label>
+          <input name="emotion" defaultValue={defaultValues?.emotion ?? ''}
+            placeholder="e.g. Urgency, fear of missing out"
+            className={inputCls} />
+        </div>
       </div>
+
       <div>
-        <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Notes</label>
+        <label className={labelCls}>Notes</label>
         <textarea name="notes" rows={3} defaultValue={defaultValues?.notes ?? ''}
-          className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
+          placeholder="Internal production notes…"
+          className={`${inputCls} resize-none`} />
       </div>
-      <button type="submit" className="bg-accent text-white rounded-md px-4 py-2 hover:bg-accent-h text-sm font-medium">
-        {submitLabel}
-      </button>
+
+      <div className="pt-1">
+        <button type="submit"
+          className="bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-6 py-2.5 text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-accent/20">
+          {submitLabel}
+        </button>
+      </div>
     </form>
   )
 }

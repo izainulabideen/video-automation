@@ -9,8 +9,8 @@ import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp, Film, Image, Globe, Lock } from 'lucide-react'
-import { NICHES, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
+import { Copy, Check, ChevronDown, ChevronUp, Film, ImageIcon, Globe, ExternalLink, Upload, Plus } from 'lucide-react'
+import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
@@ -34,18 +34,26 @@ const STATUS_OPTIONS = [
   { value: 'published',     label: 'Published' },
 ]
 
-function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+const inputCls = 'w-full bg-white/[0.04] border border-white/[0.09] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-brand-500 focus:border-accent/50 focus:bg-white/[0.06] transition-all'
+const labelCls = 'block text-[11px] font-semibold text-brand-400 uppercase tracking-wider mb-1.5'
+
+function Section({ title, children, defaultOpen = true, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="bg-white rounded-lg border border-brand-200 overflow-hidden mb-4">
+    <div className="bg-[#0D1117] rounded-xl border border-white/[0.07] overflow-hidden mb-3">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-brand-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
       >
-        <span className="text-sm font-semibold text-brand-800">{title}</span>
-        {open ? <ChevronUp size={15} className="text-brand-400" /> : <ChevronDown size={15} className="text-brand-400" />}
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-semibold text-white">{title}</span>
+          {badge}
+        </div>
+        {open
+          ? <ChevronUp size={14} className="text-brand-500 shrink-0" />
+          : <ChevronDown size={14} className="text-brand-500 shrink-0" />}
       </button>
-      {open && <div className="px-5 pb-5 pt-1">{children}</div>}
+      {open && <div className="px-5 pb-5 pt-0.5 border-t border-white/[0.05]">{children}</div>}
     </div>
   )
 }
@@ -55,10 +63,26 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="shrink-0 border border-brand-200 rounded p-1 hover:bg-brand-100 text-brand-500"
+      className="shrink-0 bg-white/[0.04] border border-white/[0.09] rounded-md p-1.5 hover:bg-white/[0.08] text-brand-400 hover:text-brand-200 transition-all"
       title="Copy"
     >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
+      {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+    </button>
+  )
+}
+
+function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-40 ${
+        on ? 'bg-accent' : 'bg-white/10'
+      }`}
+    >
+      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+        on ? 'translate-x-[18px]' : 'translate-x-0.5'
+      }`} />
     </button>
   )
 }
@@ -66,9 +90,9 @@ function CopyButton({ text }: { text: string }) {
 function MediaThumbnail({ g }: { g: Graphic }) {
   const isClip = g.media_type === 'clip' || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i)
   return (
-    <a key={g.id} href={g.file_url} target="_blank" rel="noreferrer" className="relative group block">
+    <a href={g.file_url} target="_blank" rel="noreferrer" className="relative group block">
       {isClip ? (
-        <div className="rounded aspect-square bg-brand-900 border border-brand-200 flex flex-col items-center justify-center gap-1 hover:opacity-80 transition overflow-hidden relative">
+        <div className="rounded-lg aspect-square bg-[#161B27] border border-white/[0.08] flex flex-col items-center justify-center gap-1 hover:opacity-80 transition overflow-hidden relative">
           <video src={g.file_url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
           <div className="relative z-10 flex flex-col items-center">
             <Film size={18} className="text-white" />
@@ -80,9 +104,9 @@ function MediaThumbnail({ g }: { g: Graphic }) {
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={g.file_url} alt={g.file_name}
-          className="rounded aspect-square object-cover w-full border border-brand-200 hover:opacity-80 transition" />
+          className="rounded-lg aspect-square object-cover w-full border border-white/[0.08] hover:opacity-80 transition" />
       )}
-      <span className="absolute bottom-1 left-1 right-1 text-center text-xs text-white/80 truncate opacity-0 group-hover:opacity-100 transition bg-black/40 rounded px-1">
+      <span className="absolute bottom-1 left-1 right-1 text-center text-xs text-white/80 truncate opacity-0 group-hover:opacity-100 transition bg-black/50 rounded px-1 py-0.5">
         {g.file_name}
       </span>
     </a>
@@ -93,19 +117,19 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
   const router = useRouter()
   const id = scenario.id
 
-  // ── Details ────────────────────────────────────────────────────────────────
+  // Details
   const [editingDetails, setEditingDetails] = useState(false)
   const [detailSaving,   setDetailSaving]   = useState(false)
   const [statusSaving,   setStatusSaving]   = useState(false)
   const [pubSettings, setPubSettings] = useState<PublicSettings>({
-    scenario_id:        scenario.id,
-    is_public:          publicSettings?.is_public          ?? false,
-    show_script:        publicSettings?.show_script        ?? true,
-    show_graphics:      publicSettings?.show_graphics      ?? true,
-    show_video:         publicSettings?.show_video         ?? true,
+    scenario_id:         scenario.id,
+    is_public:           publicSettings?.is_public           ?? false,
+    show_script:         publicSettings?.show_script         ?? true,
+    show_graphics:       publicSettings?.show_graphics       ?? true,
+    show_video:          publicSettings?.show_video          ?? true,
     show_platform_links: publicSettings?.show_platform_links ?? true,
-    updated_at:         publicSettings?.updated_at,
-    updated_by:         publicSettings?.updated_by,
+    updated_at:          publicSettings?.updated_at,
+    updated_by:          publicSettings?.updated_by,
   })
   const [publicSaving, setPublicSaving] = useState(false)
 
@@ -127,17 +151,17 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
   async function savePublicSettings(next: PublicSettings) {
     setPublicSaving(true)
     await upsertPublicSettings(id, {
-      is_public:          next.is_public,
-      show_script:        next.show_script,
-      show_graphics:      next.show_graphics,
-      show_video:         next.show_video,
+      is_public:           next.is_public,
+      show_script:         next.show_script,
+      show_graphics:       next.show_graphics,
+      show_video:          next.show_video,
       show_platform_links: next.show_platform_links,
     })
     setPubSettings(next)
     setPublicSaving(false)
   }
 
-  // ── Prompts ────────────────────────────────────────────────────────────────
+  // Prompts
   const [showPromptForm, setShowPromptForm] = useState(false)
   const [promptSaving,   setPromptSaving]   = useState(false)
 
@@ -150,7 +174,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
     router.refresh()
   }
 
-  // ── Script ─────────────────────────────────────────────────────────────────
+  // Script
   const [scriptBody,  setScriptBody]  = useState(script?.body ?? '')
   const [scriptSaving, setScriptSaving] = useState(false)
   const [scriptSaved,  setScriptSaved]  = useState(false)
@@ -163,7 +187,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
     setTimeout(() => setScriptSaved(false), 2000)
   }
 
-  // ── Media (images + clips) ─────────────────────────────────────────────────
+  // Media
   const [uploading, setUploading] = useState(false)
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': [], 'video/*': [] },
@@ -191,7 +215,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
     },
   })
 
-  // ── Video ──────────────────────────────────────────────────────────────────
+  // Video
   const [videoSaving, setVideoSaving] = useState(false)
   const platforms = video?.platform_urls as Record<string, string> | null
 
@@ -205,152 +229,171 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
   const images = graphics.filter(g => g.media_type !== 'clip' && !g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
   const clips  = graphics.filter(g => g.media_type === 'clip'  || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="mt-4">
 
       {/* Details */}
       <Section title="Details">
         {editingDetails ? (
-          <form action={saveDetails} className="space-y-3">
-            {([
-              { name: 'title', label: 'Title', required: true },
-              { name: 'hook',  label: 'Hook',  required: true },
-            ] as const).map(f => (
-              <div key={f.name}>
-                <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</label>
-                <input name={f.name} required defaultValue={scenario[f.name] ?? ''}
-                  className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
+          <form action={saveDetails} className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Title</label>
+                <input name="title" required defaultValue={scenario.title ?? ''}
+                  className={inputCls} />
               </div>
-            ))}
-            <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Niche</label>
-              <select name="niche" defaultValue={scenario.niche ?? ''}
-                className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none">
-                {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
-            {([
-              { name: 'audience', label: 'Audience' },
-              { name: 'emotion',  label: 'Emotion' },
-            ] as const).map(f => (
-              <div key={f.name}>
-                <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</label>
-                <input name={f.name} defaultValue={scenario[f.name] ?? ''}
-                  className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Hook</label>
+                <input name="hook" required defaultValue={scenario.hook ?? ''}
+                  className={inputCls} />
               </div>
-            ))}
-            <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Palette</label>
-              <select name="palette" defaultValue={scenario.palette ?? ''}
-                className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none">
-                <option value="">None</option>
-                {PALETTES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
+              <div>
+                <label className={labelCls}>Niche</label>
+                <select name="niche" defaultValue={scenario.niche ?? ''}
+                  className={inputCls}>
+                  {NICHES.map(n => (
+                    <option key={n} value={n} className="bg-[#111827]">{NICHE_LABELS[n] ?? n}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Palette</label>
+                <select name="palette" defaultValue={scenario.palette ?? ''}
+                  className={inputCls}>
+                  <option value="" className="bg-[#111827]">None</option>
+                  {PALETTES.map(p => (
+                    <option key={p.value} value={p.value} className="bg-[#111827]">{p.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Audience</label>
+                <input name="audience" defaultValue={scenario.audience ?? ''}
+                  placeholder="e.g. 25-40 yr earners"
+                  className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Emotion</label>
+                <input name="emotion" defaultValue={scenario.emotion ?? ''}
+                  placeholder="e.g. Urgency"
+                  className={inputCls} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Notes</label>
+                <textarea name="notes" rows={2} defaultValue={scenario.notes ?? ''}
+                  className={`${inputCls} resize-none`} />
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Notes</label>
-              <textarea name="notes" rows={3} defaultValue={scenario.notes ?? ''}
-                className="mt-1 w-full border border-brand-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none" />
-            </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-1">
               <button type="submit" disabled={detailSaving}
-                className="bg-accent text-white rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-accent-h">
-                {detailSaving ? 'Saving…' : 'Save'}
+                className="bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-all">
+                {detailSaving ? 'Saving…' : 'Save Changes'}
               </button>
               <button type="button" onClick={() => setEditingDetails(false)}
-                className="border border-brand-300 rounded-md px-4 py-2 text-sm hover:bg-brand-100">
+                className="border border-white/[0.09] rounded-lg px-4 py-2 text-sm text-brand-300 hover:bg-white/[0.04] transition-all">
                 Cancel
               </button>
             </div>
           </form>
         ) : (
-          <div className="space-y-3">
-            {([
-              { label: 'Hook',     value: scenario.hook },
-              { label: 'Audience', value: scenario.audience },
-              { label: 'Emotion',  value: scenario.emotion },
-              { label: 'Palette',  value: scenario.palette },
-              { label: 'Notes',    value: scenario.notes },
-            ] as { label: string; value: string | null }[]).filter(f => f.value).map(f => (
-              <div key={f.label}>
-                <p className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</p>
-                <p className="text-sm text-brand-700 mt-0.5">{f.value}</p>
-              </div>
-            ))}
-            <div className="flex items-center gap-3 pt-3 flex-wrap border-t border-brand-100 mt-2">
+          <div className="pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              {([
+                { label: 'Hook',     value: scenario.hook },
+                { label: 'Niche',    value: NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche },
+                { label: 'Audience', value: scenario.audience },
+                { label: 'Emotion',  value: scenario.emotion },
+                { label: 'Palette',  value: scenario.palette },
+              ] as { label: string; value: string | null | undefined }[]).filter(f => f.value).map(f => (
+                <div key={f.label}>
+                  <p className={labelCls}>{f.label}</p>
+                  <p className="text-sm text-brand-200">{f.value}</p>
+                </div>
+              ))}
+              {scenario.notes && (
+                <div className="sm:col-span-2">
+                  <p className={labelCls}>Notes</p>
+                  <p className="text-sm text-brand-400 leading-relaxed">{scenario.notes}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 pt-4 border-t border-white/[0.05] flex-wrap">
               <button onClick={() => setEditingDetails(true)}
-                className="border border-brand-300 rounded-md px-3 py-1.5 text-xs hover:bg-brand-100">
+                className="border border-white/[0.09] rounded-lg px-3.5 py-1.5 text-xs text-brand-300 hover:bg-white/[0.04] hover:text-white transition-all font-medium">
                 Edit Details
               </button>
-
               <div className="flex items-center gap-2">
-                <span className="text-xs text-brand-500">Status:</span>
+                <span className="text-[11px] text-brand-500">Status</span>
                 <select
                   defaultValue={scenario.status ?? 'draft'}
                   onChange={e => changeStatus(e.target.value)}
                   disabled={statusSaving}
-                  className="border border-brand-300 rounded-md px-2 py-1 text-xs focus:ring-2 focus:ring-accent outline-none disabled:opacity-50"
+                  className="bg-white/[0.04] border border-white/[0.09] rounded-lg px-3 py-1.5 text-xs text-brand-200 focus:border-accent/40 outline-none disabled:opacity-40 transition-all"
                 >
-                  {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  {STATUS_OPTIONS.map(s => (
+                    <option key={s.value} value={s.value} className="bg-[#111827]">{s.label}</option>
+                  ))}
                 </select>
               </div>
-
             </div>
           </div>
         )}
       </Section>
 
       {/* Prompts */}
-      <Section title={`Prompts (${prompts.length})`}>
-        <div className="space-y-2 mb-3">
+      <Section
+        title="Prompts"
+        badge={<span className="text-[11px] bg-white/[0.05] border border-white/[0.07] text-brand-400 rounded-full px-2 py-0.5">{prompts.length}</span>}
+      >
+        <div className="space-y-2.5 pt-4 mb-3">
           {prompts.map(p => (
-            <div key={p.id} className="border border-brand-200 rounded-md p-3">
-              <div className="flex items-center justify-between gap-2 mb-1.5">
+            <div key={p.id} className="bg-white/[0.02] border border-white/[0.07] rounded-lg p-3.5">
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-medium text-brand-600 uppercase tracking-wide">{p.scene_type}</span>
+                  <span className="text-[11px] font-semibold text-brand-300 uppercase tracking-wide">{p.scene_type}</span>
                   {p.caption_word && (
-                    <span className="text-xs font-mono bg-brand-100 px-2 py-0.5 rounded text-brand-700">{p.caption_word}</span>
+                    <span className="text-[11px] font-mono bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">{p.caption_word}</span>
                   )}
-                  <span className="text-xs text-brand-400 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded">{p.ai_tool}</span>
+                  <span className="text-[11px] text-brand-500 bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded-full">{p.ai_tool}</span>
                 </div>
                 <CopyButton text={p.prompt_text} />
               </div>
-              <p className="text-xs font-mono bg-brand-50 px-2 py-1.5 rounded text-brand-700 leading-relaxed whitespace-pre-wrap">{p.prompt_text}</p>
+              <p className="text-xs font-mono bg-black/30 border border-white/[0.05] px-3 py-2 rounded-lg text-brand-300 leading-relaxed whitespace-pre-wrap">{p.prompt_text}</p>
             </div>
           ))}
         </div>
 
         {showPromptForm ? (
-          <form action={savePrompt} className="border border-brand-200 rounded-md p-4 space-y-3 bg-brand-50">
+          <form action={savePrompt} className="border border-accent/20 bg-accent/[0.03] rounded-xl p-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Scene Type</label>
-                <select name="scene_type" required
-                  className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none">
-                  <option value="">Select…</option>
-                  {SCENE_TYPES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                <label className={labelCls}>Scene Type</label>
+                <select name="scene_type" required className={inputCls}>
+                  <option value="" className="bg-[#111827]">Select…</option>
+                  {SCENE_TYPES.map(s => (
+                    <option key={s.value} value={s.value} className="bg-[#111827]">{s.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Caption Word</label>
-                <input name="caption_word"
-                  className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none" />
+                <label className={labelCls}>Caption Word</label>
+                <input name="caption_word" placeholder="e.g. TRAP"
+                  className={inputCls} />
               </div>
             </div>
             <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Prompt Text</label>
+              <label className={labelCls}>Prompt Text</label>
               <textarea name="prompt_text" required rows={4}
-                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm font-mono focus:ring-2 focus:ring-accent outline-none" />
+                className={`${inputCls} font-mono resize-none`} />
             </div>
             <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">AI Tool</label>
+              <label className={labelCls}>AI Tool</label>
               <input
                 name="ai_tool"
                 list="ai-tools-list"
                 placeholder="e.g. Midjourney, Sora, Kling…"
                 defaultValue="Midjourney"
-                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none"
+                className={inputCls}
               />
               <datalist id="ai-tools-list">
                 {AI_TOOL_SUGGESTIONS.map(t => <option key={t} value={t} />)}
@@ -358,182 +401,192 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={promptSaving}
-                className="bg-accent text-white rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50 hover:bg-accent-h">
+                className="bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-4 py-2 text-xs font-semibold disabled:opacity-40 hover:opacity-90 transition-all">
                 {promptSaving ? 'Saving…' : 'Add Prompt'}
               </button>
               <button type="button" onClick={() => setShowPromptForm(false)}
-                className="border border-brand-300 rounded-md px-3 py-1.5 text-xs hover:bg-brand-100">
+                className="border border-white/[0.09] rounded-lg px-4 py-2 text-xs text-brand-400 hover:bg-white/[0.04] transition-all">
                 Cancel
               </button>
             </div>
           </form>
         ) : (
           <button onClick={() => setShowPromptForm(true)}
-            className="border border-dashed border-brand-300 rounded-md px-4 py-2 text-xs text-brand-500 hover:border-accent hover:text-accent w-full transition-colors">
-            + Add Prompt
+            className="flex items-center justify-center gap-2 w-full border border-dashed border-white/[0.1] rounded-xl px-4 py-3 text-xs text-brand-500 hover:border-accent/40 hover:text-accent transition-all">
+            <Plus size={13} />
+            Add Prompt
           </button>
         )}
       </Section>
 
       {/* Script */}
       <Section title="Script">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-brand-500">
-            {scriptBody.trim() ? `~${scriptBody.trim().split(/\s+/).length} words` : 'No script yet'}
+        <div className="pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] text-brand-500">
+              {scriptBody.trim() ? `~${scriptBody.trim().split(/\s+/).length} words` : 'No script yet'}
+            </span>
+            <CopyButton text={scriptBody} />
+          </div>
+          <textarea
+            value={scriptBody}
+            onChange={e => setScriptBody(e.target.value)}
+            rows={12}
+            placeholder="Write or paste the script here…"
+            className={`${inputCls} resize-none leading-relaxed`}
+          />
+          <button onClick={saveScript} disabled={scriptSaving}
+            className={`mt-3 rounded-lg px-5 py-2 text-sm font-semibold disabled:opacity-40 transition-all ${
+              scriptSaved
+                ? 'bg-success/20 text-success border border-success/30'
+                : 'bg-gradient-to-r from-accent to-accent-h text-white hover:opacity-90 shadow-lg shadow-accent/20'
+            }`}>
+            {scriptSaving ? 'Saving…' : scriptSaved ? '✓ Saved!' : 'Save Script'}
+          </button>
+        </div>
+      </Section>
+
+      {/* Media */}
+      <Section
+        title="Media"
+        defaultOpen={false}
+        badge={
+          <span className="text-[11px] text-brand-500">
+            {images.length} image{images.length !== 1 ? 's' : ''} · {clips.length} clip{clips.length !== 1 ? 's' : ''}
           </span>
-          <CopyButton text={scriptBody} />
+        }
+      >
+        <div className="pt-4">
+          {/* Dropzone */}
+          <div {...getRootProps()}
+            className={`mb-4 border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+              isDragActive
+                ? 'border-accent/60 bg-accent/[0.05]'
+                : 'border-white/[0.08] hover:border-accent/30 hover:bg-white/[0.02]'
+            }`}>
+            <input {...getInputProps()} />
+            <Upload size={22} className={`mx-auto mb-2 ${isDragActive ? 'text-accent' : 'text-brand-500'}`} />
+            <p className="text-sm text-brand-300 font-medium mb-1">
+              {uploading ? 'Uploading…' : 'Drop images or video clips'}
+            </p>
+            <p className="text-[11px] text-brand-600">JPG, PNG, GIF, MP4, MOV, WEBM · click to browse</p>
+          </div>
+
+          {images.length > 0 && (
+            <div className="mb-4">
+              <p className="flex items-center gap-1.5 text-[11px] text-brand-500 uppercase tracking-wider mb-2.5">
+                <ImageIcon size={11} /> Images ({images.length})
+              </p>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {images.map(g => <MediaThumbnail key={g.id} g={g} />)}
+              </div>
+            </div>
+          )}
+
+          {clips.length > 0 && (
+            <div>
+              <p className="flex items-center gap-1.5 text-[11px] text-brand-500 uppercase tracking-wider mb-2.5">
+                <Film size={11} /> Clips ({clips.length})
+              </p>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {clips.map(g => <MediaThumbnail key={g.id} g={g} />)}
+              </div>
+            </div>
+          )}
         </div>
-        <textarea
-          value={scriptBody}
-          onChange={e => setScriptBody(e.target.value)}
-          rows={12}
-          placeholder="Write or paste the script here…"
-          className="w-full border border-brand-300 rounded-md px-3 py-2 text-sm leading-relaxed focus:ring-2 focus:ring-accent outline-none"
-        />
-        <button onClick={saveScript} disabled={scriptSaving}
-          className="mt-2 bg-accent text-white rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-accent-h">
-          {scriptSaving ? 'Saving…' : scriptSaved ? 'Saved!' : 'Save Script'}
-        </button>
       </Section>
 
-      {/* Media: Images + Clips */}
-      <Section title={`Media · ${images.length} image${images.length !== 1 ? 's' : ''} · ${clips.length} clip${clips.length !== 1 ? 's' : ''}`} defaultOpen={false}>
-        {/* Upload zone */}
-        <div {...getRootProps()}
-          className={`mb-4 border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition ${
-            isDragActive ? 'border-accent bg-accent/5' : 'border-brand-300 hover:border-accent'
-          }`}>
-          <input {...getInputProps()} />
-          <div className="flex items-center justify-center gap-3 text-brand-400">
-            <Image size={16} />
-            <span className="text-sm">Images</span>
-            <span className="text-brand-300">|</span>
-            <Film size={16} />
-            <span className="text-sm">Video Clips</span>
-          </div>
-          <p className="text-xs text-brand-400 mt-1">
-            {uploading ? 'Uploading…' : 'Drop images or video clips (.mp4, .mov, .webm) · click to browse'}
-          </p>
-        </div>
-
-        {/* Images */}
-        {images.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-              <Image size={11} /> Images ({images.length})
-            </p>
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {images.map(g => <MediaThumbnail key={g.id} g={g} />)}
-            </div>
-          </div>
-        )}
-
-        {/* Clips */}
-        {clips.length > 0 && (
-          <div>
-            <p className="text-xs text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-              <Film size={11} /> Clips ({clips.length})
-            </p>
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {clips.map(g => <MediaThumbnail key={g.id} g={g} />)}
-            </div>
-          </div>
-        )}
-      </Section>
-
-      {/* Video */}
+      {/* Final Video */}
       <Section title="Final Video" defaultOpen={false}>
-        <form action={saveVideo} className="space-y-3">
-          {([
-            { name: 'file_url', label: 'File URL',    value: video?.file_url ?? '' },
-            { name: 'tiktok',   label: 'TikTok URL',  value: platforms?.['tiktok'] ?? '' },
-            { name: 'youtube',  label: 'YouTube URL', value: platforms?.['youtube'] ?? '' },
-            { name: 'reels',    label: 'Reels URL',   value: platforms?.['reels'] ?? '' },
-          ] as const).map(f => (
-            <div key={f.name} className="flex items-center gap-2">
-              <label className="text-xs text-brand-500 w-24 shrink-0">{f.label}</label>
-              <input name={f.name} defaultValue={f.value}
-                className="flex-1 border border-brand-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none" />
-              {f.value && <CopyButton text={f.value} />}
-            </div>
-          ))}
+        <form action={saveVideo} className="space-y-4 pt-4">
+          <div className="space-y-3">
+            {([
+              { name: 'file_url', label: 'File URL',    value: video?.file_url ?? '' },
+              { name: 'tiktok',   label: 'TikTok URL',  value: platforms?.['tiktok'] ?? '' },
+              { name: 'youtube',  label: 'YouTube URL', value: platforms?.['youtube'] ?? '' },
+              { name: 'reels',    label: 'Reels URL',   value: platforms?.['reels'] ?? '' },
+            ] as const).map(f => (
+              <div key={f.name} className="flex items-center gap-2.5">
+                <label className="text-[11px] text-brand-500 w-24 shrink-0 font-medium">{f.label}</label>
+                <input name={f.name} defaultValue={f.value} placeholder="https://"
+                  className={`${inputCls} flex-1`} />
+                {f.value && <CopyButton text={f.value} />}
+              </div>
+            ))}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Status</label>
+              <label className={labelCls}>Video Status</label>
               <select name="status" defaultValue={video?.status ?? 'editing'}
-                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none">
-                {VIDEO_STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                className={inputCls}>
+                {VIDEO_STATUS_OPTIONS.map(s => (
+                  <option key={s.value} value={s.value} className="bg-[#111827]">{s.label}</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Duration (sec)</label>
+              <label className={labelCls}>Duration (sec)</label>
               <input name="duration_sec" type="number" defaultValue={video?.duration_sec ?? ''}
-                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none" />
+                placeholder="60"
+                className={inputCls} />
             </div>
           </div>
           <div>
-            <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">Publish Date</label>
+            <label className={labelCls}>Publish Date</label>
             <input name="publish_date" type="date" defaultValue={video?.publish_date ?? ''}
-              className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none" />
+              className={`${inputCls} w-48`} />
           </div>
           <button type="submit" disabled={videoSaving}
-            className="bg-accent text-white rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 hover:bg-accent-h">
+            className="bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-5 py-2 text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-all shadow-lg shadow-accent/20">
             {videoSaving ? 'Saving…' : 'Save Video'}
           </button>
         </form>
       </Section>
 
       {/* Public Settings */}
-      <Section title={pubSettings.is_public ? '🌐 Public · Visible on /watch' : '🔒 Private · Hidden from /watch'} defaultOpen={false}>
-        <div className="space-y-4">
-
+      <Section
+        title={pubSettings.is_public ? 'Public · Live on /watch' : 'Private · Hidden from /watch'}
+        defaultOpen={false}
+        badge={
+          <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
+            pubSettings.is_public
+              ? 'bg-success/10 text-success border-success/20'
+              : 'bg-white/[0.04] text-brand-500 border-white/[0.07]'
+          }`}>
+            {pubSettings.is_public ? 'Live' : 'Hidden'}
+          </span>
+        }
+      >
+        <div className="space-y-4 pt-4">
           {/* Master toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-brand-200 bg-brand-50">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.07] bg-white/[0.02]">
             <div>
-              <p className="text-sm font-medium text-brand-800">Show on public /watch page</p>
+              <p className="text-sm font-semibold text-white">Show on public /watch page</p>
               <p className="text-xs text-brand-500 mt-0.5">
-                {pubSettings.is_public ? 'Visible to anyone at /watch.' : 'Only your team can see this.'}
+                {pubSettings.is_public ? 'Anyone can view this at /watch.' : 'Only your team can see this.'}
               </p>
             </div>
-            <button
-              onClick={() => savePublicSettings({ ...pubSettings, is_public: !pubSettings.is_public })}
-              disabled={publicSaving}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                pubSettings.is_public ? 'bg-green-500' : 'bg-brand-300'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                pubSettings.is_public ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
+            <Toggle on={pubSettings.is_public} disabled={publicSaving}
+              onChange={() => savePublicSettings({ ...pubSettings, is_public: !pubSettings.is_public })} />
           </div>
 
           {/* Per-section toggles */}
           {pubSettings.is_public && (
             <div className="space-y-2">
-              <p className="text-xs text-brand-500 uppercase tracking-widest font-medium">What to show publicly</p>
+              <p className={labelCls}>What to show publicly</p>
               {([
                 { key: 'show_script',          label: 'Script',           desc: 'Full written script' },
                 { key: 'show_graphics',         label: 'Media / Graphics', desc: 'Images and video clips' },
                 { key: 'show_video',            label: 'Final Video',      desc: 'Embedded video player' },
                 { key: 'show_platform_links',   label: 'Platform Links',   desc: 'TikTok, YouTube, Reels' },
               ] as { key: keyof PublicSettings; label: string; desc: string }[]).map(item => (
-                <div key={String(item.key)} className="flex items-center justify-between px-3 py-2.5 rounded-md border border-brand-200 bg-white">
+                <div key={String(item.key)} className="flex items-center justify-between px-4 py-3 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.03] transition-colors">
                   <div>
-                    <p className="text-sm text-brand-800">{item.label}</p>
-                    <p className="text-xs text-brand-400">{item.desc}</p>
+                    <p className="text-sm text-brand-200">{item.label}</p>
+                    <p className="text-[11px] text-brand-500">{item.desc}</p>
                   </div>
-                  <button
-                    onClick={() => savePublicSettings({ ...pubSettings, [item.key]: !pubSettings[item.key] })}
-                    disabled={publicSaving}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 ${
-                      pubSettings[item.key] ? 'bg-accent' : 'bg-brand-200'
-                    }`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
-                      pubSettings[item.key] ? 'translate-x-5' : 'translate-x-1'
-                    }`} />
-                  </button>
+                  <Toggle on={!!pubSettings[item.key]} disabled={publicSaving}
+                    onChange={() => savePublicSettings({ ...pubSettings, [item.key]: !pubSettings[item.key] })} />
                 </div>
               ))}
             </div>
@@ -541,7 +594,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
 
           {/* Audit trail */}
           {pubSettings.updated_at && (
-            <p className="text-xs text-brand-400">
+            <p className="text-[11px] text-brand-600">
               Last updated {new Date(pubSettings.updated_at).toLocaleString()}
               {pubSettings.updated_by ? ` by ${pubSettings.updated_by}` : ''}
             </p>
@@ -549,8 +602,9 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
 
           {pubSettings.is_public && (
             <a href={`/watch/${id}`} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-accent hover:opacity-70 underline underline-offset-2">
-              <Globe size={12} /> View public page →
+              className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-2 transition-colors">
+              <ExternalLink size={12} />
+              View public page
             </a>
           )}
         </div>

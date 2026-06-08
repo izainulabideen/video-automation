@@ -4,8 +4,11 @@ import { createScenario } from '@/actions/scenarios'
 export default function NewScenarioPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-brand-900 tracking-tight mb-6">New Scenario</h1>
-      <ScenarioForm action={createScenario} submitLabel="Create Scenario" />
+      <div className="mb-7">
+        <h1 className="text-xl font-bold text-white">New Story</h1>
+        <p className="text-xs text-brand-400 mt-0.5">Create a new finance scenario</p>
+      </div>
+      <ScenarioForm action={createScenario} submitLabel="Create Story" />
     </div>
   )
 }

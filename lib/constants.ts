@@ -33,6 +33,19 @@ export const NICHES = [
   'real_estate', 'investing', 'tax_strategy', 'other',
 ] as const
 
+export const NICHE_LABELS: Record<string, string> = {
+  wealth_secrets:    'Wealth Secrets',
+  career_money:      'Career & Money',
+  money_psychology:  'Money Psychology',
+  tech_careers:      'Tech Careers',
+  wall_street:       'Wall Street',
+  legal_finance:     'Legal Finance',
+  real_estate:       'Real Estate',
+  investing:         'Investing',
+  tax_strategy:      'Tax Strategy',
+  other:             'Other',
+}
+
 export const STATUS_OPTIONS = [
   { value: 'draft',         label: 'Draft' },
   { value: 'in_production', label: 'In Production' },

@@ -4,6 +4,9 @@ import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { ScenarioWorkspace } from '@/components/scenarios/ScenarioWorkspace'
 import { formatDate } from '@/lib/utils'
 import type { PublicSettings } from '@/actions/public-settings'
+import { NICHE_LABELS } from '@/lib/constants'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 export const revalidate = 30
 
@@ -33,11 +36,16 @@ export default async function ScenarioDetailPage({ params }: Props) {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-4">
+      {/* Back + header */}
+      <Link href="/scenarios" className="inline-flex items-center gap-1 text-[11px] text-brand-500 hover:text-brand-300 transition-colors mb-4">
+        <ChevronLeft size={13} />
+        All Scenarios
+      </Link>
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h1 className="text-xl font-bold text-brand-900">{scenario.title}</h1>
-          <p className="text-xs text-brand-500 uppercase tracking-wide mt-0.5">
-            {scenario.niche} · {formatDate(scenario.created_at)}
+          <h1 className="text-xl font-bold text-white leading-tight">{scenario.title}</h1>
+          <p className="text-xs text-brand-500 uppercase tracking-wide mt-1">
+            {NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
           </p>
         </div>
         <ScenarioStatusBadge status={scenario.status} />

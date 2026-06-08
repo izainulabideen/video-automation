@@ -1,27 +1,93 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Brand colors */
-  --color-brand-900: #0F172A;
-  --color-brand-800: #1E293B;
-  --color-brand-700: #334155;
-  --color-brand-500: #64748B;
-  --color-brand-300: #CBD5E1;
-  --color-brand-100: #F1F5F9;
-  --color-brand-50:  #F8FAFC;
-  --color-accent:    #6D28D9;
-  --color-accent-h:  #5B21B6;
-  --color-accent-2:  #2563EB;
+  /* Deep obsidian dark base */
+  --color-brand-900: #080B14;
+  --color-brand-800: #0D1117;
+  --color-brand-700: #161B27;
+  --color-brand-600: #1E2536;
+  --color-brand-500: #2D3548;
+  --color-brand-400: #4A5568;
+  --color-brand-300: #6B7A99;
+  --color-brand-200: #A0AABF;
+  --color-brand-100: #D1D8E8;
+  --color-brand-50:  #EEF1F8;
+
+  /* Gold accent — premium finance */
+  --color-accent:    #C8922A;
+  --color-accent-h:  #B07820;
+  --color-accent-2:  #E8B84B;
+  --color-accent-glow: rgba(200, 146, 42, 0.15);
+
+  /* Semantic */
   --color-success:   #10B981;
   --color-warning:   #F59E0B;
   --color-danger:    #EF4444;
+  --color-info:      #3B82F6;
+
+  /* Surface layers */
+  --color-surface-1: #0D1117;
+  --color-surface-2: #111827;
+  --color-surface-3: #1A2235;
+  --color-surface-4: #1F2A3D;
+
+  /* Border */
+  --color-border:    rgba(255,255,255,0.07);
+  --color-border-h:  rgba(255,255,255,0.12);
 
   /* Border radius */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
 
   /* Typography */
   --font-sans: 'Geist', system-ui, sans-serif;
   --font-mono: 'Geist Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #080B14;
+  color: #D1D8E8;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* Input focus glow */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(200, 146, 42, 0.3);
+}
+
+/* Gold gradient text utility */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #E8B84B 0%, #C8922A 50%, #A07020 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Subtle noise texture on surfaces */
+.noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
 }
