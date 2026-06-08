@@ -100,14 +100,24 @@ export function CommandPalette() {
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="hidden md:flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-[12px] text-brand-500 hover:text-brand-300 hover:border-white/[0.14] transition-all"
-      >
-        <Search size={12} />
-        <span>Search…</span>
-        <kbd className="ml-2 text-[10px] bg-white/[0.06] border border-white/[0.1] rounded px-1.5 py-0.5 font-mono text-brand-600">⌘K</kbd>
-      </button>
+      <>
+        {/* Desktop: full search bar */}
+        <button
+          onClick={() => setOpen(true)}
+          className="hidden md:flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-[12px] text-brand-500 hover:text-brand-300 hover:border-white/[0.14] transition-all"
+        >
+          <Search size={12} />
+          <span>Search…</span>
+          <kbd className="ml-2 text-[10px] bg-white/[0.06] border border-white/[0.1] rounded px-1.5 py-0.5 font-mono text-brand-600">⌘K</kbd>
+        </button>
+        {/* Mobile: icon only */}
+        <button
+          onClick={() => setOpen(true)}
+          className="md:hidden p-2 rounded-lg border border-white/[0.08] text-brand-500 hover:text-brand-300 hover:border-white/[0.14] transition-all"
+        >
+          <Search size={16} />
+        </button>
+      </>
     )
   }
 

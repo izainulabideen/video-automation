@@ -8,7 +8,7 @@ export default function NewScenarioPage() {
         <h1 className="text-xl font-bold text-white">New Story</h1>
         <p className="text-xs text-brand-400 mt-0.5">Create a new finance scenario</p>
       </div>
-      <ScenarioForm action={createScenario} submitLabel="Create Story" />
+      <ScenarioForm action={createScenario} submitLabel="Create Story" showTemplates />
     </div>
   )
 }

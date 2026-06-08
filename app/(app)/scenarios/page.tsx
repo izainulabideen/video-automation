@@ -4,6 +4,7 @@ import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { ScenariosFilters } from '@/components/scenarios/ScenariosFilters'
 import { KanbanBoard } from '@/components/scenarios/KanbanBoard'
 import { ViewToggle } from '@/components/scenarios/ViewToggle'
+import { BulkScenarioActions } from '@/components/scenarios/BulkScenarioActions'
 import { formatDate } from '@/lib/utils'
 import { Plus, Film } from 'lucide-react'
 import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default async function ScenariosPage({ searchParams }: Props) {
-  const params  = await searchParams
+  const params   = await searchParams
   const supabase = createAdminClient()
   const view     = params.view ?? 'list'
 
@@ -23,7 +24,6 @@ export default async function ScenariosPage({ searchParams }: Props) {
     .from('scenarios')
     .select('id, title, niche, hook, status, created_at, assigned_to, due_date')
 
-  // Kanban shows all statuses regardless of filter
   if (view !== 'kanban') {
     if (params.status) query = query.eq('status', params.status as never)
   }
@@ -38,7 +38,6 @@ export default async function ScenariosPage({ searchParams }: Props) {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-white">Scenarios</h1>
@@ -54,10 +53,8 @@ export default async function ScenariosPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Filters (hidden in kanban — kanban shows all) */}
       {view !== 'kanban' && <ScenariosFilters />}
 
-      {/* Kanban board */}
       {view === 'kanban' ? (
         <KanbanBoard scenarios={(scenarios ?? []) as never[]} />
       ) : !scenarios?.length ? (
@@ -70,29 +67,34 @@ export default async function ScenariosPage({ searchParams }: Props) {
           <Link href="/scenarios/new" className="text-xs text-accent hover:text-accent-2 underline">Create one →</Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/[0.07] overflow-hidden bg-[#0D1117]">
-          {scenarios.map((s, i) => (
-            <Link key={s.id} href={`/scenarios/${s.id}`}
-              className={`flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-colors group ${i > 0 ? 'border-t border-white/[0.05]' : ''}`}>
-              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                s.status === 'published' ? 'bg-success' :
-                s.status === 'in_production' ? 'bg-warning' : 'bg-brand-500'
-              }`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-white group-hover:text-accent transition-colors truncate">{s.title}</p>
-                <p className="text-[11px] text-brand-500 truncate mt-0.5">{s.hook}</p>
-              </div>
-              <span className={`text-[11px] hidden md:block shrink-0 px-2.5 py-1 rounded-full border ${NICHE_COLORS[s.niche] ?? 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20'}`}>
-                {NICHE_LABELS[s.niche] ?? s.niche}
-              </span>
-              <ScenarioStatusBadge status={s.status} />
-              <span className="text-[11px] text-brand-600 shrink-0 hidden lg:block">{formatDate(s.created_at)}</span>
-              <svg className="w-3.5 h-3.5 text-brand-600 group-hover:text-brand-300 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          ))}
-        </div>
+        <BulkScenarioActions
+          scenarios={scenarios as never[]}
+          renderRow={(s, selected, toggle) => (
+            <div key={s.id}
+              className={`flex items-center gap-3 px-4 py-4 border-t first:border-t-0 border-white/[0.05] hover:bg-white/[0.02] transition-colors group ${selected ? 'bg-accent/[0.03]' : ''}`}>
+              <button onClick={toggle} className="shrink-0 text-brand-600 hover:text-accent transition-colors p-0.5">
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-accent border-accent' : 'border-white/20 group-hover:border-white/40'}`}>
+                  {selected && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                </div>
+              </button>
+              <Link href={`/scenarios/${s.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  s.status === 'published' ? 'bg-success' :
+                  s.status === 'in_production' ? 'bg-warning' : 'bg-brand-500'
+                }`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-white group-hover:text-accent transition-colors truncate">{s.title}</p>
+                  <p className="text-[11px] text-brand-500 truncate mt-0.5">{s.hook}</p>
+                </div>
+                <span className={`text-[11px] hidden md:block shrink-0 px-2.5 py-1 rounded-full border ${NICHE_COLORS[s.niche] ?? 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20'}`}>
+                  {NICHE_LABELS[s.niche] ?? s.niche}
+                </span>
+                <ScenarioStatusBadge status={s.status} />
+                <span className="text-[11px] text-brand-600 shrink-0 hidden lg:block">{formatDate(s.created_at)}</span>
+              </Link>
+            </div>
+          )}
+        />
       )}
     </div>
   )

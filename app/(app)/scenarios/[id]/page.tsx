@@ -14,6 +14,7 @@ import { NICHE_LABELS } from '@/lib/constants'
 import { getOrCreateChecklist } from '@/actions/checklist'
 import { getActivityLog } from '@/actions/activity'
 import { getComments } from '@/actions/comments'
+import { getScriptVersions } from '@/actions/scripts'
 import { getSession } from '@/lib/session'
 import Link from 'next/link'
 import { ChevronLeft, MessageSquare, UserCircle } from 'lucide-react'
@@ -37,6 +38,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
     checklist,
     activityLog,
     comments,
+    scriptVersions,
     session,
   ] = await Promise.all([
     supabase.from('scenarios').select('*').eq('id', id).single(),
@@ -49,6 +51,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
     getOrCreateChecklist(id),
     getActivityLog(id),
     getComments(id),
+    getScriptVersions(id),
     getSession(),
   ])
 
@@ -127,6 +130,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
             graphics={(graphics ?? []) as never[]}
             video={video as never ?? undefined}
             publicSettings={publicSettings as PublicSettings ?? null}
+            scriptVersions={scriptVersions}
           />
         </div>
 

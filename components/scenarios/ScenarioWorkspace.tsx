@@ -10,8 +10,12 @@ import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
 import { SortableMedia } from '@/components/scenarios/SortableMedia'
 import { AIGeneratePanel } from '@/components/scenarios/AIGeneratePanel'
+import { StoryboardView } from '@/components/scenarios/StoryboardView'
+import { VideoEmbed } from '@/components/scenarios/VideoEmbed'
+import { ScriptHistory } from '@/components/scenarios/ScriptHistory'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus } from 'lucide-react'
+import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus, Layers } from 'lucide-react'
+import type { ScriptVersion } from '@/actions/scripts'
 import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
@@ -22,12 +26,13 @@ type Graphic  = Database['public']['Tables']['graphics']['Row'] & { media_type?:
 type Video    = Database['public']['Tables']['videos']['Row']
 
 interface Props {
-  scenario:       Scenario & { cover_graphic_id?: string | null }
-  prompts:        Prompt[]
-  script?:        Script
-  graphics:       Graphic[]
-  video?:         Video
-  publicSettings: PublicSettings | null
+  scenario:        Scenario & { cover_graphic_id?: string | null }
+  prompts:         Prompt[]
+  script?:         Script
+  graphics:        Graphic[]
+  video?:          Video
+  publicSettings:  PublicSettings | null
+  scriptVersions?: ScriptVersion[]
 }
 
 const STATUS_OPTIONS = [
@@ -90,7 +95,7 @@ function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void;
 }
 
 
-export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings }: Props) {
+export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings, scriptVersions = [] }: Props) {
   const router = useRouter()
   const id = scenario.id
 
@@ -424,8 +429,40 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
             }`}>
             {scriptSaving ? 'Saving…' : scriptSaved ? '✓ Saved!' : 'Save Script'}
           </button>
+          <ScriptHistory
+            scenarioId={id}
+            versions={scriptVersions}
+            onRestore={(body) => setScriptBody(body)}
+          />
         </div>
       </Section>
+
+      {/* Storyboard */}
+      {(prompts.length > 0 || graphics.length > 0) && (
+        <Section
+          title="Storyboard"
+          defaultOpen={false}
+          badge={
+            <div className="flex items-center gap-1 text-brand-600">
+              <Layers size={11} />
+              <span className="text-[11px]">{prompts.length} scenes</span>
+            </div>
+          }
+        >
+          <div className="pt-4">
+            <StoryboardView
+              prompts={prompts.map(p => ({
+                id: p.id, scene_type: p.scene_type, prompt_text: p.prompt_text,
+                ai_tool: p.ai_tool, caption_word: p.caption_word, sort_order: p.sort_order,
+              }))}
+              graphics={graphics.map(g => ({
+                id: g.id, file_url: g.file_url, file_name: g.file_name,
+                media_type: g.media_type, scene_type: (g as never as { scene_type?: string }).scene_type, sort_order: g.sort_order,
+              }))}
+            />
+          </div>
+        </Section>
+      )}
 
       {/* Media */}
       <Section
@@ -469,6 +506,14 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
 
       {/* Final Video */}
       <Section title="Final Video" defaultOpen={false}>
+        {/* Inline player if a URL exists */}
+        {(video?.file_url || platforms?.['youtube'] || platforms?.['tiktok']) && (
+          <div className="pt-4 pb-2 space-y-3">
+            {video?.file_url && <VideoEmbed url={video.file_url} label="File" />}
+            {!video?.file_url && platforms?.['youtube'] && <VideoEmbed url={platforms['youtube']} label="YouTube" />}
+            {!video?.file_url && !platforms?.['youtube'] && platforms?.['tiktok'] && <VideoEmbed url={platforms['tiktok']} label="TikTok" />}
+          </div>
+        )}
         <form action={saveVideo} className="space-y-4 pt-4">
           <div className="space-y-3">
             {([

@@ -25,8 +25,8 @@ export async function TopBar() {
         </div>
       </div>
 
-      {/* Cmd+K search */}
-      <div className="hidden md:block">
+      {/* Cmd+K search — desktop inline, mobile icon */}
+      <div className="flex items-center">
         <CommandPalette />
       </div>
 
