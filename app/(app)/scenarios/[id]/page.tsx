@@ -18,6 +18,7 @@ import { getScriptVersions } from '@/actions/scripts'
 import { getSession } from '@/lib/session'
 import Link from 'next/link'
 import { ChevronLeft, MessageSquare, UserCircle } from 'lucide-react'
+import type { BrandTheme } from '@/types/brand'
 
 export const revalidate = 0
 
@@ -41,7 +42,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
     scriptVersions,
     session,
   ] = await Promise.all([
-    supabase.from('scenarios').select('*').eq('id', id).single(),
+    supabase.from('scenarios').select('*, brand:brands(id, name, theme_config)').eq('id', id).single(),
     supabase.from('prompts').select('*').eq('scenario_id', id).order('sort_order'),
     supabase.from('scripts').select('*').eq('scenario_id', id).single(),
     supabase.from('graphics').select('*').eq('scenario_id', id).order('sort_order'),
@@ -68,6 +69,9 @@ export default async function ScenarioDetailPage({ params }: Props) {
   const dueDate = (scenario as Record<string, unknown>).due_date as string | null ?? null
   const assignedTo = (scenario as Record<string, unknown>).assigned_to as string | null ?? null
   const isOverdue = dueDate && new Date(dueDate) < new Date()
+  const brand = (scenario as Record<string, unknown>).brand as { id: string; name: string; theme_config: BrandTheme } | null ?? null
+  const brandAccent = brand?.theme_config?.accent ?? '#C8922A'
+  const brandNicheLabels = brand?.theme_config?.nicheLabels ?? {}
 
   return (
     <div>
@@ -83,8 +87,15 @@ export default async function ScenarioDetailPage({ params }: Props) {
           <h1 className="text-xl font-bold text-white leading-tight">{scenario.title}</h1>
           <div className="flex items-center flex-wrap gap-3 mt-1">
             <p className="text-xs text-brand-500 uppercase tracking-wide">
-              {NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
+              {brandNicheLabels[scenario.niche ?? ''] ?? NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
             </p>
+            {brand && (
+              <span className="text-[10px] flex items-center gap-1.5 px-2 py-0.5 rounded-full border"
+                style={{ borderColor: brandAccent + '30', color: brandAccent, background: brandAccent + '10' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: brandAccent }} />
+                {brand.name}
+              </span>
+            )}
             {assignedTo && (
               <div className="flex items-center gap-1.5 text-xs text-brand-400">
                 <UserCircle size={11} />
@@ -131,6 +142,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
             video={video as never ?? undefined}
             publicSettings={publicSettings as PublicSettings ?? null}
             scriptVersions={scriptVersions}
+            brand={brand as never}
           />
         </div>
 

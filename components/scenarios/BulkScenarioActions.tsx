@@ -16,7 +16,7 @@ async function bulkDeleteScenarios(ids: string[]): Promise<void> {
   })
 }
 
-type Scenario = { id: string; title: string; hook: string | null; niche: string; status: string; created_at: string }
+type Scenario = { id: string; title: string; hook: string | null; niche: string; status: string; created_at: string; brand?: { name: string; theme_config: { accent: string } } | null }
 
 interface Props {
   scenarios: Scenario[]
@@ -132,6 +132,13 @@ export function BulkScenarioActions({ scenarios }: Props) {
                   <p className="text-[13px] font-semibold text-white group-hover:text-accent transition-colors truncate">{s.title}</p>
                   <p className="text-[11px] text-brand-500 truncate mt-0.5">{s.hook}</p>
                 </div>
+                {s.brand && (
+                  <span className="text-[10px] hidden lg:flex shrink-0 items-center gap-1.5 px-2 py-0.5 rounded-full border"
+                    style={{ borderColor: s.brand.theme_config.accent + '30', color: s.brand.theme_config.accent, background: s.brand.theme_config.accent + '10' }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.brand.theme_config.accent }} />
+                    {s.brand.name}
+                  </span>
+                )}
                 <span className={`text-[11px] hidden md:block shrink-0 px-2.5 py-1 rounded-full border ${NICHE_COLORS[s.niche] ?? 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20'}`}>
                   {NICHE_LABELS[s.niche] ?? s.niche}
                 </span>

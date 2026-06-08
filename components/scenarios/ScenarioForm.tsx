@@ -1,25 +1,33 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { NICHES, NICHE_LABELS, PALETTES, STATUS_OPTIONS } from '@/lib/constants'
+import { PALETTES } from '@/lib/constants'
 import type { Database } from '@/types/database'
 import { TemplatesPicker, type ScenarioTemplate } from '@/components/scenarios/TemplatesPicker'
+import type { Brand } from '@/types/brand'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
 
 interface ScenarioFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: (fd: FormData) => Promise<{ success: boolean; error?: string; data?: any }>
-  defaultValues?: Partial<Scenario>
+  defaultValues?: Partial<Scenario> & { brand_id?: string }
   submitLabel?: string
   showTemplates?: boolean
+  brands?: Brand[]
 }
 
 const labelCls = 'block text-[11px] font-semibold text-brand-300 uppercase tracking-wider mb-1.5'
 const inputCls = 'w-full bg-white/[0.04] border border-white/[0.09] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-brand-500 focus:border-accent/50 focus:bg-white/[0.06] transition-all'
 
-export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', showTemplates = false }: ScenarioFormProps) {
+export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', showTemplates = false, brands = [] }: ScenarioFormProps) {
   const router = useRouter()
+
+  const [brandId, setBrandId] = useState(defaultValues?.brand_id ?? brands[0]?.id ?? '')
+  const activeBrand = brands.find(b => b.id === brandId)
+  const niches = activeBrand?.theme_config?.niches ?? []
+  const nicheLabels = activeBrand?.theme_config?.nicheLabels ?? {}
+
   const [vals, setVals] = useState({
     title:    defaultValues?.title    ?? '',
     hook:     defaultValues?.hook     ?? '',
@@ -39,11 +47,35 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
     if (result.success && result.data?.id) router.push(`/scenarios/${result.data.id}`)
     else if (result.success) router.push('/scenarios')
   }
+
   return (
     <form action={handleSubmit} className="space-y-5 max-w-2xl">
       {showTemplates && <TemplatesPicker onSelect={applyTemplate} />}
-      {/* Title + Niche row */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Brand picker */}
+        {brands.length > 0 && (
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Brand / Channel</label>
+            <div className="flex flex-wrap gap-2">
+              {brands.map(b => (
+                <button key={b.id} type="button"
+                  onClick={() => { setBrandId(b.id); setVals(v => ({ ...v, niche: '' })) }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all"
+                  style={{
+                    borderColor: brandId === b.id ? b.theme_config.accent : 'rgba(255,255,255,0.09)',
+                    background:  brandId === b.id ? b.theme_config.accent + '15' : 'rgba(255,255,255,0.04)',
+                    color:       brandId === b.id ? b.theme_config.accentH : 'rgba(255,255,255,0.5)',
+                  }}>
+                  <span className="w-2 h-2 rounded-full" style={{ background: b.theme_config.accent }} />
+                  {b.name}
+                </button>
+              ))}
+            </div>
+            <input type="hidden" name="brand_id" value={brandId} />
+          </div>
+        )}
+
         <div className="sm:col-span-2">
           <label className={labelCls}>Title</label>
           <input name="title" required value={vals.title} onChange={e => setVals(v => ({...v, title: e.target.value}))}
@@ -61,8 +93,8 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
           <select name="niche" required value={vals.niche} onChange={e => setVals(v => ({...v, niche: e.target.value}))}
             className={inputCls}>
             <option value="" disabled className="bg-[#111827]">Select niche</option>
-            {NICHES.map(n => (
-              <option key={n} value={n} className="bg-[#111827]">{NICHE_LABELS[n] ?? n}</option>
+            {niches.map(n => (
+              <option key={n} value={n} className="bg-[#111827]">{nicheLabels[n] ?? n}</option>
             ))}
           </select>
         </div>

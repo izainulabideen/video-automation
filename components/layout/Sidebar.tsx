@@ -1,16 +1,17 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle } from 'lucide-react'
+import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/scenarios',        label: 'Scenarios', icon: Clapperboard },
-  { href: '/scenarios/new',    label: 'New Story',  icon: PlusCircle },
-  { href: '/calendar',         label: 'Calendar',   icon: Calendar },
-  { href: '/settings/team',    label: 'Team',        icon: Users },
-  { href: '/settings/profile', label: 'Profile',    icon: UserCircle },
-  { href: '/settings',         label: 'Settings',   icon: Settings },
+  { href: '/scenarios',         label: 'Scenarios', icon: Clapperboard },
+  { href: '/scenarios/new',     label: 'New Story',  icon: PlusCircle },
+  { href: '/calendar',          label: 'Calendar',   icon: Calendar },
+  { href: '/settings/brands',   label: 'Brands',     icon: Layers },
+  { href: '/settings/team',     label: 'Team',       icon: Users },
+  { href: '/settings/profile',  label: 'Profile',    icon: UserCircle },
+  { href: '/settings',          label: 'Settings',   icon: Settings },
 ]
 
 export function Sidebar() {

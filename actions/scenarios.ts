@@ -15,6 +15,7 @@ export async function createScenario(fd: FormData): Promise<ActionResult<{ id: s
     .from('scenarios')
     .insert({
       title, niche, hook,
+      brand_id: (fd.get('brand_id') as string) || null,
       audience: (fd.get('audience') as string) || null,
       emotion:  (fd.get('emotion')  as string) || null,
       palette:  (fd.get('palette')  as string) || null,
@@ -29,6 +30,7 @@ export async function createScenario(fd: FormData): Promise<ActionResult<{ id: s
 
 export async function updateScenario(id: string, fd: FormData): Promise<ActionResult> {
   const supabase = createAdminClient()
+  const brandId = fd.get('brand_id') as string | null
   const { error } = await supabase.from('scenarios').update({
     title:    (fd.get('title')    as string) || undefined,
     niche:    (fd.get('niche')    as string) || undefined,
@@ -37,6 +39,7 @@ export async function updateScenario(id: string, fd: FormData): Promise<ActionRe
     emotion:  (fd.get('emotion')  as string) || null,
     palette:  (fd.get('palette')  as string) || null,
     notes:    (fd.get('notes')    as string) || null,
+    brand_id: brandId || null,
   }).eq('id', id)
   if (error) return { success: false, error: error.message }
   revalidatePath(`/scenarios/${id}`)

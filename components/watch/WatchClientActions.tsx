@@ -5,9 +5,10 @@ interface Props {
   scenarioId: string
   title: string
   shareUrl: string
+  accent?: string
 }
 
-export function WatchClientActions({ scenarioId, title, shareUrl }: Props) {
+export function WatchClientActions({ scenarioId, title, shareUrl, accent = '#F59E0B' }: Props) {
   // Increment view count once on mount
   useEffect(() => {
     fetch('/api/watch/view', {
@@ -60,13 +61,18 @@ export function WatchClientActions({ scenarioId, title, shareUrl }: Props) {
       <div className="flex flex-wrap gap-2.5">
         {shares.map(s => (
           <a key={s.label} href={s.href} target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] hover:border-amber-400/25 bg-white/[0.02] hover:bg-amber-400/[0.04] transition-all text-sm text-white/60 hover:text-white/90">
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] transition-all text-sm text-white/60 hover:text-white/90"
+            style={{ ['--accent' as string]: accent }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = accent + '40'; (e.currentTarget as HTMLElement).style.background = accent + '08' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = ''; (e.currentTarget as HTMLElement).style.background = '' }}>
             {s.icon}
             {s.label}
           </a>
         ))}
         <button onClick={copyLink}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] hover:border-amber-400/25 bg-white/[0.02] hover:bg-amber-400/[0.04] transition-all text-sm text-white/60 hover:text-white/90">
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] transition-all text-sm text-white/60 hover:text-white/90"
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = accent + '40'; (e.currentTarget as HTMLElement).style.background = accent + '08' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = ''; (e.currentTarget as HTMLElement).style.background = '' }}>
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>

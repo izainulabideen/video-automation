@@ -23,7 +23,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
 
   let query = supabase
     .from('scenarios')
-    .select('id, title, niche, hook, status, created_at')
+    .select('id, title, niche, hook, status, created_at, brand:brands(name, theme_config)')
 
   if (view !== 'kanban') {
     if (params.status) query = query.eq('status', params.status as never)

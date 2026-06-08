@@ -18,6 +18,7 @@ import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus, Layers
 import type { ScriptVersion } from '@/actions/scripts'
 import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
+import type { Brand } from '@/types/brand'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
 type Prompt   = Database['public']['Tables']['prompts']['Row']
@@ -33,6 +34,7 @@ interface Props {
   video?:          Video
   publicSettings:  PublicSettings | null
   scriptVersions?: ScriptVersion[]
+  brand?:          Brand | null
 }
 
 const STATUS_OPTIONS = [
@@ -95,7 +97,7 @@ function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void;
 }
 
 
-export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings, scriptVersions = [] }: Props) {
+export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings, scriptVersions = [], brand }: Props) {
   const router = useRouter()
   const id = scenario.id
 
@@ -255,8 +257,8 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
                 <label className={labelCls}>Niche</label>
                 <select name="niche" defaultValue={scenario.niche ?? ''}
                   className={inputCls}>
-                  {NICHES.map(n => (
-                    <option key={n} value={n} className="bg-[#111827]">{NICHE_LABELS[n] ?? n}</option>
+                  {(brand?.theme_config?.niches ?? NICHES).map(n => (
+                    <option key={n} value={n} className="bg-[#111827]">{brand?.theme_config?.nicheLabels?.[n] ?? NICHE_LABELS[n] ?? n}</option>
                   ))}
                 </select>
               </div>
