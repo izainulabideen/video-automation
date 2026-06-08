@@ -1,6 +1,7 @@
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { getSession } from '@/lib/session'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { CommandPalette } from '@/components/layout/CommandPalette'
 
 export async function TopBar() {
   const session = await getSession()
@@ -24,7 +25,10 @@ export async function TopBar() {
         </div>
       </div>
 
-      <div className="hidden md:block" />
+      {/* Cmd+K search */}
+      <div className="hidden md:block">
+        <CommandPalette />
+      </div>
 
       {/* Right side */}
       <div className="flex items-center gap-3">
