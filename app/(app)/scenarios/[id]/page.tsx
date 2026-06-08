@@ -5,15 +5,19 @@ import { DuplicateScenarioButton } from '@/components/scenarios/DuplicateScenari
 import { ScenarioWorkspace } from '@/components/scenarios/ScenarioWorkspace'
 import { ScenarioChecklist } from '@/components/scenarios/ScenarioChecklist'
 import { ActivityLogView } from '@/components/scenarios/ActivityLog'
+import { CommentsPanel } from '@/components/scenarios/CommentsPanel'
+import { AssignmentWidget } from '@/components/scenarios/AssignmentWidget'
 import { formatDate } from '@/lib/utils'
 import type { PublicSettings } from '@/actions/public-settings'
 import { NICHE_LABELS } from '@/lib/constants'
 import { getOrCreateChecklist } from '@/actions/checklist'
 import { getActivityLog } from '@/actions/activity'
+import { getComments } from '@/actions/comments'
+import { getSession } from '@/lib/session'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MessageSquare, UserCircle } from 'lucide-react'
 
-export const revalidate = 30
+export const revalidate = 0
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -28,8 +32,11 @@ export default async function ScenarioDetailPage({ params }: Props) {
     { data: graphics },
     { data: video },
     { data: publicSettings },
+    { data: teamUsers },
     checklist,
     activityLog,
+    comments,
+    session,
   ] = await Promise.all([
     supabase.from('scenarios').select('*').eq('id', id).single(),
     supabase.from('prompts').select('*').eq('scenario_id', id).order('sort_order'),
@@ -37,8 +44,11 @@ export default async function ScenarioDetailPage({ params }: Props) {
     supabase.from('graphics').select('*').eq('scenario_id', id).order('sort_order'),
     supabase.from('videos').select('*').eq('scenario_id', id).single(),
     supabase.from('public_settings').select('*').eq('scenario_id', id).single(),
+    supabase.from('users').select('name').order('name'),
     getOrCreateChecklist(id),
     getActivityLog(id),
+    getComments(id),
+    getSession(),
   ])
 
   if (!scenario) notFound()
@@ -46,6 +56,14 @@ export default async function ScenarioDetailPage({ params }: Props) {
   const done  = checklist.filter(i => i.is_done).length
   const total = checklist.length
   const pct   = total ? Math.round((done / total) * 100) : 0
+  const currentUser = session?.name ?? 'Unknown'
+  const teamMembers = (teamUsers ?? []).map((u: { name: string }) => u.name)
+  const commentCount = comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0)
+
+  // Due date overdue check
+  const dueDate = (scenario as Record<string, unknown>).due_date as string | null ?? null
+  const assignedTo = (scenario as Record<string, unknown>).assigned_to as string | null ?? null
+  const isOverdue = dueDate && new Date(dueDate) < new Date()
 
   return (
     <div>
@@ -59,9 +77,26 @@ export default async function ScenarioDetailPage({ params }: Props) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h1 className="text-xl font-bold text-white leading-tight">{scenario.title}</h1>
-          <p className="text-xs text-brand-500 uppercase tracking-wide mt-1">
-            {NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
-          </p>
+          <div className="flex items-center flex-wrap gap-3 mt-1">
+            <p className="text-xs text-brand-500 uppercase tracking-wide">
+              {NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
+            </p>
+            {assignedTo && (
+              <div className="flex items-center gap-1.5 text-xs text-brand-400">
+                <UserCircle size={11} />
+                {assignedTo}
+              </div>
+            )}
+            {dueDate && (
+              <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                isOverdue
+                  ? 'text-danger bg-danger/10 border-danger/25'
+                  : 'text-brand-400 bg-white/[0.03] border-white/[0.07]'
+              }`}>
+                {isOverdue ? 'Overdue · ' : 'Due · '}{new Date(dueDate).toLocaleDateString()}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <DuplicateScenarioButton id={id} />
@@ -81,7 +116,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
         <span className="text-[11px] text-brand-500 shrink-0">{pct}% complete</span>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4">
         {/* Main workspace */}
         <div>
           <ScenarioWorkspace
@@ -94,7 +129,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
           />
         </div>
 
-        {/* Right sidebar: checklist + activity */}
+        {/* Right sidebar */}
         <div className="space-y-3">
           {/* Checklist */}
           <div className="bg-[#0D1117] rounded-xl border border-white/[0.07] overflow-hidden">
@@ -104,6 +139,40 @@ export default async function ScenarioDetailPage({ params }: Props) {
             </div>
             <div className="px-4 pb-4 pt-3">
               <ScenarioChecklist scenarioId={id} items={checklist} />
+            </div>
+          </div>
+
+          {/* Assignment */}
+          <div className="bg-[#0D1117] rounded-xl border border-white/[0.07] overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.05]">
+              <span className="text-sm font-semibold text-white">Assignment</span>
+            </div>
+            <div className="px-4 pb-4 pt-3">
+              <AssignmentWidget
+                scenarioId={id}
+                assignedTo={assignedTo}
+                dueDate={dueDate}
+                teamMembers={teamMembers}
+              />
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="bg-[#0D1117] rounded-xl border border-white/[0.07] overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.05] flex items-center gap-2">
+              <span className="text-sm font-semibold text-white">Comments</span>
+              {commentCount > 0 && (
+                <span className="text-[11px] text-brand-500 flex items-center gap-1">
+                  <MessageSquare size={10} />{commentCount}
+                </span>
+              )}
+            </div>
+            <div className="px-4 pb-4 pt-3">
+              <CommentsPanel
+                scenarioId={id}
+                comments={comments}
+                currentUser={currentUser}
+              />
             </div>
           </div>
 
