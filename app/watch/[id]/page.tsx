@@ -21,10 +21,16 @@ export default async function WatchDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createAdminClient()
 
-  const [{ data: scenario }, { data: video }, { data: graphics }, { data: script }] = await Promise.all([
-    supabase.from('scenarios').select('*').eq('id', id).eq('status', 'published').single(),
-    supabase.from('videos').select('*').eq('scenario_id', id).single(),
-    supabase.from('graphics').select('*').eq('scenario_id', id).order('sort_order'),
+  // Only fetch public-safe fields from scenarios (no notes, palette, audience, emotion)
+  const [
+    { data: scenario },
+    { data: video },
+    { data: graphics },
+    { data: script },
+  ] = await Promise.all([
+    supabase.from('scenarios').select('id, title, niche, hook, status').eq('id', id).single(),
+    supabase.from('videos').select('file_url, platform_urls, status, duration_sec, publish_date').eq('scenario_id', id).single(),
+    supabase.from('graphics').select('id, file_url, file_name, sort_order').eq('scenario_id', id).order('sort_order'),
     supabase.from('scripts').select('body').eq('scenario_id', id).single(),
   ])
 
@@ -32,10 +38,12 @@ export default async function WatchDetailPage({ params }: Props) {
 
   const platforms = video?.platform_urls as Record<string, string> | null
   const platformLinks = [
-    { key: 'tiktok',   label: 'TikTok',   url: platforms?.['tiktok'] },
-    { key: 'youtube',  label: 'YouTube',  url: platforms?.['youtube'] },
-    { key: 'reels',    label: 'Reels',    url: platforms?.['reels'] },
+    { key: 'tiktok',  label: 'TikTok',   url: platforms?.['tiktok'] },
+    { key: 'youtube', label: 'YouTube',  url: platforms?.['youtube'] },
+    { key: 'reels',   label: 'Reels',    url: platforms?.['reels'] },
   ].filter(p => p.url)
+
+  const isPublished = scenario.status === 'published'
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -49,7 +57,7 @@ export default async function WatchDetailPage({ params }: Props) {
 
       {/* Hero / Video */}
       <div className="pt-16">
-        {video?.file_url ? (
+        {isPublished && video?.file_url ? (
           <div className="relative aspect-video max-h-[70vh] w-full bg-black">
             <video
               src={video.file_url}
@@ -60,10 +68,17 @@ export default async function WatchDetailPage({ params }: Props) {
           </div>
         ) : graphics?.[0] ? (
           <div className="relative aspect-video max-h-[70vh] w-full overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={graphics[0].file_url} alt={scenario.title}
               className="w-full h-full object-cover" />
+            {!isPublished && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center">
+                <span className="bg-black/60 backdrop-blur text-zinc-400 text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-zinc-700">
+                  Coming Soon
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="aspect-video max-h-[40vh] w-full bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center">
@@ -80,8 +95,8 @@ export default async function WatchDetailPage({ params }: Props) {
         </h1>
         <p className="text-zinc-400 text-lg leading-relaxed mb-8">{scenario.hook}</p>
 
-        {/* Platform Links */}
-        {platformLinks.length > 0 && (
+        {/* Platform Links — only shown when published */}
+        {isPublished && platformLinks.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-10">
             {platformLinks.map(p => (
               <a key={p.key} href={p.url!} target="_blank" rel="noreferrer"
@@ -95,21 +110,7 @@ export default async function WatchDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Scenario details */}
-        <div className="grid grid-cols-2 gap-4 mb-10">
-          {([
-            { label: 'Audience', value: scenario.audience },
-            { label: 'Emotion',  value: scenario.emotion },
-            { label: 'Palette',  value: scenario.palette },
-          ] as { label: string; value: string | null }[]).filter(f => f.value).map(f => (
-            <div key={f.label} className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
-              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{f.label}</p>
-              <p className="text-white text-sm">{f.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Script */}
+        {/* Script — always public */}
         {script?.body && (
           <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 mb-10">
             <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">Script</p>
@@ -117,8 +118,8 @@ export default async function WatchDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Graphics */}
-        {(graphics?.length ?? 0) > 1 && (
+        {/* Graphics storyboard — always public */}
+        {(graphics?.length ?? 0) > 0 && (
           <div>
             <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">Visual Storyboard</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
