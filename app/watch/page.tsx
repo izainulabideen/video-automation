@@ -1,12 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
+import { NICHE_LABELS } from '@/lib/constants'
 
 export const revalidate = 300
 
 export default async function WatchPage() {
   const supabase = createAdminClient()
 
-  // Join scenarios with public_settings — only show where is_public = true
   const { data: rows } = await supabase
     .from('public_settings')
     .select('scenario_id, scenarios(id, title, niche, hook, created_at, status)')
@@ -18,55 +18,203 @@ export default async function WatchPage() {
     .flatMap(r => (Array.isArray(r.scenarios) ? r.scenarios : r.scenarios ? [r.scenarios] : []))
     .filter(Boolean) as ScenarioRow[]
 
-  return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <div className="relative flex flex-col items-center justify-center py-24 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-black to-black" />
-        <div className="relative z-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 mb-4 font-medium">Veank Studio</p>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-4">
-            Finance Stories
-          </h1>
-          <p className="text-zinc-400 text-lg max-w-md mx-auto leading-relaxed">
-            Cinematic finance education. Real insights, no noise.
-          </p>
-        </div>
-      </div>
+  const published = scenarios.filter(s => s.status === 'published')
+  const upcoming  = scenarios.filter(s => s.status !== 'published')
 
-      {/* Grid */}
-      <div className="max-w-6xl mx-auto px-6 pb-24">
+  return (
+    <div className="min-h-screen bg-[#06080F] text-white selection:bg-amber-400/20 selection:text-amber-200">
+
+      {/* ── Film grain overlay ── */}
+      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.03]"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, backgroundSize: '200px 200px' }} />
+
+      {/* ── Nav ── */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-8 py-5 mix-blend-normal">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+              <path d="M2 3.5L7 2L12 3.5V7C12 9.8 9.8 12.3 7 13C4.2 12.3 2 9.8 2 7V3.5Z" fill="white" fillOpacity="0.95"/>
+            </svg>
+          </div>
+          <span className="text-[13px] font-bold tracking-tight text-white">Veank</span>
+        </div>
+        <span className="text-[11px] tracking-[0.25em] uppercase text-white/30">Finance · Education</span>
+      </nav>
+
+      {/* ── Hero ── */}
+      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+
+        {/* Background glow pools */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(ellipse, #92400e 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[400px] rounded-full opacity-10"
+          style={{ background: 'radial-gradient(ellipse, #1c1917 0%, transparent 70%)' }} />
+
+        {/* Horizontal rule */}
+        <div className="relative z-10 flex items-center gap-4 mb-10">
+          <div className="w-12 h-px bg-amber-400/40" />
+          <span className="text-[10px] tracking-[0.4em] uppercase text-amber-400/60 font-medium">Veank Studio</span>
+          <div className="w-12 h-px bg-amber-400/40" />
+        </div>
+
+        {/* Giant headline */}
+        <h1 className="relative z-10 font-black leading-[0.92] tracking-[-0.04em] mb-8"
+          style={{ fontSize: 'clamp(3.5rem, 12vw, 10rem)' }}>
+          <span className="block text-white">Finance</span>
+          <span className="block" style={{
+            background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 40%, #92400e 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>Stories</span>
+        </h1>
+
+        <p className="relative z-10 text-white/40 text-lg max-w-sm mx-auto leading-relaxed font-light tracking-wide">
+          Cinematic education.<br />Real insights, no noise.
+        </p>
+
+        {/* Scroll cue */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-30">
+          <div className="w-px h-10 bg-gradient-to-b from-transparent to-white/60" />
+          <span className="text-[9px] tracking-[0.35em] uppercase text-white/50">Scroll</span>
+        </div>
+      </section>
+
+      {/* ── Published content ── */}
+      <section className="max-w-7xl mx-auto px-6 pb-8">
         {!scenarios.length ? (
-          <p className="text-center text-zinc-600 py-20">No content yet.</p>
+          <div className="flex flex-col items-center justify-center py-40 gap-4">
+            <div className="w-16 h-16 rounded-2xl border border-white/[0.06] flex items-center justify-center">
+              <svg className="w-7 h-7 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-white/20 text-sm tracking-widest uppercase">No content yet</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {scenarios.map(s => (
-              <Link key={s.id} href={`/watch/${s.id}`}
-                className="group block rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all hover:-translate-y-0.5">
-                <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent" />
-                  {s.status === 'published' ? (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
+          <>
+            {published.length > 0 && (
+              <div className="mb-20">
+                {/* Section label */}
+                <div className="flex items-center gap-5 mb-10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span className="text-[10px] tracking-[0.35em] uppercase text-white/30">Available Now</span>
+                  <div className="flex-1 h-px bg-white/[0.04]" />
+                  <span className="text-[10px] text-white/20">{published.length} stories</span>
+                </div>
+
+                {/* Featured first card — large */}
+                {published[0] && (
+                  <Link href={`/watch/${published[0].id}`}
+                    className="group relative block mb-4 rounded-2xl overflow-hidden border border-white/[0.06] hover:border-amber-400/20 transition-all duration-500">
+                    <div className="aspect-[21/7] bg-gradient-to-br from-[#0f0c05] via-[#1a130a] to-[#06080F] relative overflow-hidden flex items-end p-10">
+                      {/* Glow */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                        style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(180,100,10,0.12) 0%, transparent 60%)' }} />
+                      {/* Play button */}
+                      <div className="absolute right-10 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-white/10 flex items-center justify-center backdrop-blur-sm bg-white/[0.03] group-hover:scale-110 group-hover:border-amber-400/30 transition-all duration-300">
+                        <svg className="w-6 h-6 text-white/40 group-hover:text-amber-400 ml-1 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
                         </svg>
                       </div>
+                      <div className="relative z-10">
+                        <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400/60 mb-3">
+                          {NICHE_LABELS[published[0].niche] ?? published[0].niche}
+                        </p>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight max-w-2xl group-hover:text-amber-50 transition-colors">
+                          {published[0].title}
+                        </h2>
+                        <p className="mt-3 text-white/30 text-base max-w-xl leading-relaxed">{published[0].hook}</p>
+                      </div>
                     </div>
-                  ) : (
-                    <span className="text-zinc-600 text-xs uppercase tracking-widest">Coming Soon</span>
-                  )}
+                  </Link>
+                )}
+
+                {/* Remaining grid */}
+                {published.length > 1 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {published.slice(1).map(s => (
+                      <StoryCard key={s.id} s={s} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {upcoming.length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center gap-5 mb-10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  <span className="text-[10px] tracking-[0.35em] uppercase text-white/20">Coming Soon</span>
+                  <div className="flex-1 h-px bg-white/[0.04]" />
                 </div>
-                <div className="p-4">
-                  <p className="text-xs text-accent uppercase tracking-widest font-medium mb-1">{s.niche}</p>
-                  <h3 className="text-white font-semibold leading-snug mb-2">{s.title}</h3>
-                  <p className="text-zinc-500 text-xs leading-relaxed line-clamp-2">{s.hook}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {upcoming.map(s => (
+                    <StoryCard key={s.id} s={s} dimmed />
+                  ))}
                 </div>
-              </Link>
-            ))}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/[0.04] py-12 px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 rounded bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+              <svg width="8" height="8" viewBox="0 0 14 14" fill="none">
+                <path d="M2 3.5L7 2L12 3.5V7C12 9.8 9.8 12.3 7 13C4.2 12.3 2 9.8 2 7V3.5Z" fill="white" fillOpacity="0.95"/>
+              </svg>
+            </div>
+            <span className="text-[11px] text-white/30 tracking-wider">Veank Studio</span>
           </div>
+          <p className="text-[10px] text-white/15 tracking-widest uppercase">Finance · Education · {new Date().getFullYear()}</p>
+        </div>
+      </footer>
+
+    </div>
+  )
+}
+
+function StoryCard({ s, dimmed }: { s: { id: string; title: string; niche: string; hook: string; status: string }; dimmed?: boolean }) {
+  return (
+    <Link href={`/watch/${s.id}`}
+      className={`group relative block rounded-2xl overflow-hidden border border-white/[0.05] hover:border-amber-400/15 transition-all duration-400 ${dimmed ? 'opacity-50' : ''}`}>
+      {/* Thumbnail area */}
+      <div className="aspect-video bg-gradient-to-br from-[#0d0a05] to-[#06080F] relative overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(161,87,10,0.08) 0%, transparent 70%)' }} />
+
+        {/* Diagonal line pattern */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
+
+        {s.status === 'published' ? (
+          <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110 backdrop-blur-sm bg-black/20">
+            <svg className="w-4 h-4 text-amber-400 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        ) : (
+          <span className="text-[9px] tracking-[0.4em] uppercase text-white/15">Soon</span>
         )}
       </div>
-    </div>
+
+      {/* Info */}
+      <div className="p-5 bg-[#08090E]">
+        <p className="text-[10px] tracking-[0.3em] uppercase text-amber-400/50 mb-2">
+          {NICHE_LABELS[s.niche] ?? s.niche}
+        </p>
+        <h3 className="text-white/90 font-bold text-[15px] leading-snug mb-2 group-hover:text-white transition-colors line-clamp-2">
+          {s.title}
+        </h3>
+        <p className="text-white/25 text-xs leading-relaxed line-clamp-2">{s.hook}</p>
+      </div>
+
+      {/* Bottom border reveal */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    </Link>
   )
 }
