@@ -1,3 +1,8 @@
+export const AI_TOOL_SUGGESTIONS = [
+  'Midjourney', 'DALL-E 3', 'ChatGPT', 'Grok', 'Sora', 'Runway',
+  'Kling', 'Pika', 'Stable Diffusion', 'Ideogram', 'Flux', 'Luma',
+] as const
+
 export const SCENE_TYPES = [
   { value: 'money_drain',    label: 'Money Drain / Black Hole' },
   { value: 'legal_document', label: 'Legal Document / Scroll' },

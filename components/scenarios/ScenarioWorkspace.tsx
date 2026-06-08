@@ -7,14 +7,14 @@ import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react'
-import { NICHES, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS } from '@/lib/constants'
+import { Copy, Check, ChevronDown, ChevronUp, Film, Image } from 'lucide-react'
+import { NICHES, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
 type Prompt   = Database['public']['Tables']['prompts']['Row']
 type Script   = Database['public']['Tables']['scripts']['Row']
-type Graphic  = Database['public']['Tables']['graphics']['Row']
+type Graphic  = Database['public']['Tables']['graphics']['Row'] & { media_type?: string; clip_duration_sec?: number | null }
 type Video    = Database['public']['Tables']['videos']['Row']
 
 interface Props {
@@ -60,14 +60,40 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+function MediaThumbnail({ g }: { g: Graphic }) {
+  const isClip = g.media_type === 'clip' || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i)
+  return (
+    <a key={g.id} href={g.file_url} target="_blank" rel="noreferrer" className="relative group block">
+      {isClip ? (
+        <div className="rounded aspect-square bg-brand-900 border border-brand-200 flex flex-col items-center justify-center gap-1 hover:opacity-80 transition overflow-hidden relative">
+          <video src={g.file_url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
+          <div className="relative z-10 flex flex-col items-center">
+            <Film size={18} className="text-white" />
+            {g.clip_duration_sec && (
+              <span className="text-white text-xs font-mono mt-1">{g.clip_duration_sec}s</span>
+            )}
+          </div>
+        </div>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={g.file_url} alt={g.file_name}
+          className="rounded aspect-square object-cover w-full border border-brand-200 hover:opacity-80 transition" />
+      )}
+      <span className="absolute bottom-1 left-1 right-1 text-center text-xs text-white/80 truncate opacity-0 group-hover:opacity-100 transition bg-black/40 rounded px-1">
+        {g.file_name}
+      </span>
+    </a>
+  )
+}
+
 export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }: Props) {
   const router = useRouter()
   const id = scenario.id
 
   // ── Details ────────────────────────────────────────────────────────────────
   const [editingDetails, setEditingDetails] = useState(false)
-  const [detailSaving, setDetailSaving] = useState(false)
-  const [statusSaving, setStatusSaving] = useState(false)
+  const [detailSaving,   setDetailSaving]   = useState(false)
+  const [statusSaving,   setStatusSaving]   = useState(false)
 
   async function saveDetails(fd: FormData) {
     setDetailSaving(true)
@@ -86,7 +112,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
 
   // ── Prompts ────────────────────────────────────────────────────────────────
   const [showPromptForm, setShowPromptForm] = useState(false)
-  const [promptSaving, setPromptSaving] = useState(false)
+  const [promptSaving,   setPromptSaving]   = useState(false)
 
   async function savePrompt(fd: FormData) {
     setPromptSaving(true)
@@ -98,9 +124,9 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
   }
 
   // ── Script ─────────────────────────────────────────────────────────────────
-  const [scriptBody, setScriptBody] = useState(script?.body ?? '')
+  const [scriptBody,  setScriptBody]  = useState(script?.body ?? '')
   const [scriptSaving, setScriptSaving] = useState(false)
-  const [scriptSaved, setScriptSaved] = useState(false)
+  const [scriptSaved,  setScriptSaved]  = useState(false)
 
   async function saveScript() {
     setScriptSaving(true)
@@ -110,13 +136,14 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
     setTimeout(() => setScriptSaved(false), 2000)
   }
 
-  // ── Graphics ───────────────────────────────────────────────────────────────
+  // ── Media (images + clips) ─────────────────────────────────────────────────
   const [uploading, setUploading] = useState(false)
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
+    accept: { 'image/*': [], 'video/*': [] },
     onDrop: async (files) => {
       setUploading(true)
       for (const file of files) {
+        const isClip = file.type.startsWith('video/')
         const res = await fetch('/api/upload/graphics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -124,7 +151,13 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
         })
         const { uploadUrl, fileUrl } = await res.json() as { uploadUrl: string; fileUrl: string }
         await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
-        await createGraphicRecord({ scenarioId: id, fileUrl, fileName: file.name, fileSizeKb: Math.round(file.size / 1024) })
+        await createGraphicRecord({
+          scenarioId: id,
+          fileUrl,
+          fileName: file.name,
+          fileSizeKb: Math.round(file.size / 1024),
+          mediaType: isClip ? 'clip' : 'image',
+        })
       }
       setUploading(false)
       router.refresh()
@@ -141,6 +174,9 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
     setVideoSaving(false)
     router.refresh()
   }
+
+  const images = graphics.filter(g => g.media_type !== 'clip' && !g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
+  const clips  = graphics.filter(g => g.media_type === 'clip'  || g.file_name?.match(/\.(mp4|mov|webm|avi)$/i))
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -242,12 +278,12 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
           {prompts.map(p => (
             <div key={p.id} className="border border-brand-200 rounded-md p-3">
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-medium text-brand-600 uppercase tracking-wide">{p.scene_type}</span>
                   {p.caption_word && (
                     <span className="text-xs font-mono bg-brand-100 px-2 py-0.5 rounded text-brand-700">{p.caption_word}</span>
                   )}
-                  <span className="text-xs text-brand-400">{p.ai_tool}</span>
+                  <span className="text-xs text-brand-400 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded">{p.ai_tool}</span>
                 </div>
                 <CopyButton text={p.prompt_text} />
               </div>
@@ -280,11 +316,16 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
             </div>
             <div>
               <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">AI Tool</label>
-              <select name="ai_tool"
-                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none">
-                <option value="midjourney">Midjourney</option>
-                <option value="dalle3">DALL-E 3</option>
-              </select>
+              <input
+                name="ai_tool"
+                list="ai-tools-list"
+                placeholder="e.g. Midjourney, Sora, Kling…"
+                defaultValue="Midjourney"
+                className="mt-1 w-full border border-brand-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-accent outline-none"
+              />
+              <datalist id="ai-tools-list">
+                {AI_TOOL_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+              </datalist>
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={promptSaving}
@@ -326,30 +367,53 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
         </button>
       </Section>
 
-      {/* Graphics */}
-      <Section title={`Graphics (${graphics.length})`} defaultOpen={false}>
+      {/* Media: Images + Clips */}
+      <Section title={`Media · ${images.length} image${images.length !== 1 ? 's' : ''} · ${clips.length} clip${clips.length !== 1 ? 's' : ''}`} defaultOpen={false}>
+        {/* Upload zone */}
         <div {...getRootProps()}
-          className={`mb-4 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
+          className={`mb-4 border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition ${
             isDragActive ? 'border-accent bg-accent/5' : 'border-brand-300 hover:border-accent'
           }`}>
           <input {...getInputProps()} />
-          <p className="text-sm text-brand-500">{uploading ? 'Uploading…' : 'Drop images here or click to upload'}</p>
+          <div className="flex items-center justify-center gap-3 text-brand-400">
+            <Image size={16} />
+            <span className="text-sm">Images</span>
+            <span className="text-brand-300">|</span>
+            <Film size={16} />
+            <span className="text-sm">Video Clips</span>
+          </div>
+          <p className="text-xs text-brand-400 mt-1">
+            {uploading ? 'Uploading…' : 'Drop images or video clips (.mp4, .mov, .webm) · click to browse'}
+          </p>
         </div>
-        {graphics.length > 0 && (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {graphics.map(g => (
-              <a key={g.id} href={g.file_url} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={g.file_url} alt={g.file_name}
-                  className="rounded aspect-square object-cover w-full border border-brand-200 hover:opacity-80 transition" />
-              </a>
-            ))}
+
+        {/* Images */}
+        {images.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <Image size={11} /> Images ({images.length})
+            </p>
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {images.map(g => <MediaThumbnail key={g.id} g={g} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Clips */}
+        {clips.length > 0 && (
+          <div>
+            <p className="text-xs text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <Film size={11} /> Clips ({clips.length})
+            </p>
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {clips.map(g => <MediaThumbnail key={g.id} g={g} />)}
+            </div>
           </div>
         )}
       </Section>
 
       {/* Video */}
-      <Section title="Video" defaultOpen={false}>
+      <Section title="Final Video" defaultOpen={false}>
         <form action={saveVideo} className="space-y-3">
           {([
             { name: 'file_url', label: 'File URL',    value: video?.file_url ?? '' },
