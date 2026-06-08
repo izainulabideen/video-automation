@@ -10,10 +10,12 @@ interface Props { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const supabase = createAdminClient()
-  const { data } = await supabase.from('scenarios').select('title, hook').eq('id', id).single()
+  // Only resolve metadata for publicly enabled scenarios
+  const { data: ps } = await supabase.from('public_settings').select('scenario_id, scenarios(title, hook)').eq('scenario_id', id).eq('is_public', true).single()
+  const s = ps?.scenarios as unknown as { title: string; hook: string } | null
   return {
-    title: data?.title ?? 'Veank Studio',
-    description: data?.hook ?? undefined,
+    title: s?.title ?? 'Veank Studio',
+    description: s?.hook ?? undefined,
   }
 }
 
@@ -21,7 +23,17 @@ export default async function WatchDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = createAdminClient()
 
-  // Only fetch public-safe fields from scenarios (no notes, palette, audience, emotion)
+  // Check public_settings first — gate the whole page
+  const { data: ps } = await supabase
+    .from('public_settings')
+    .select('is_public, show_script, show_graphics, show_video, show_platform_links')
+    .eq('scenario_id', id)
+    .eq('is_public', true)
+    .single()
+
+  if (!ps) notFound()
+
+  // Fetch only public-safe fields (no notes, palette, audience, emotion)
   const [
     { data: scenario },
     { data: video },
@@ -29,19 +41,25 @@ export default async function WatchDetailPage({ params }: Props) {
     { data: script },
   ] = await Promise.all([
     supabase.from('scenarios').select('id, title, niche, hook, status').eq('id', id).single(),
-    supabase.from('videos').select('file_url, platform_urls, status, duration_sec, publish_date').eq('scenario_id', id).single(),
-    supabase.from('graphics').select('id, file_url, file_name, sort_order').eq('scenario_id', id).order('sort_order'),
-    supabase.from('scripts').select('body').eq('scenario_id', id).single(),
+    ps.show_video
+      ? supabase.from('videos').select('file_url, platform_urls, status').eq('scenario_id', id).single()
+      : Promise.resolve({ data: null }),
+    ps.show_graphics
+      ? supabase.from('graphics').select('id, file_url, file_name, sort_order').eq('scenario_id', id).order('sort_order')
+      : Promise.resolve({ data: [] }),
+    ps.show_script
+      ? supabase.from('scripts').select('body').eq('scenario_id', id).single()
+      : Promise.resolve({ data: null }),
   ])
 
   if (!scenario) notFound()
 
   const platforms = video?.platform_urls as Record<string, string> | null
-  const platformLinks = [
+  const platformLinks = ps.show_platform_links ? [
     { key: 'tiktok',  label: 'TikTok',   url: platforms?.['tiktok'] },
     { key: 'youtube', label: 'YouTube',  url: platforms?.['youtube'] },
     { key: 'reels',   label: 'Reels',    url: platforms?.['reels'] },
-  ].filter(p => p.url)
+  ].filter(p => p.url) : []
 
   const isPublished = scenario.status === 'published'
 
@@ -57,20 +75,20 @@ export default async function WatchDetailPage({ params }: Props) {
 
       {/* Hero / Video */}
       <div className="pt-16">
-        {isPublished && video?.file_url ? (
+        {ps.show_video && isPublished && video?.file_url ? (
           <div className="relative aspect-video max-h-[70vh] w-full bg-black">
             <video
               src={video.file_url}
               controls
               className="w-full h-full object-contain"
-              poster={graphics?.[0]?.file_url ?? undefined}
+              poster={(graphics as { file_url: string }[] | null)?.[0]?.file_url ?? undefined}
             />
           </div>
-        ) : graphics?.[0] ? (
+        ) : ps.show_graphics && (graphics as { file_url: string; id: string; file_name: string }[] | null)?.[0] ? (
           <div className="relative aspect-video max-h-[70vh] w-full overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={graphics[0].file_url} alt={scenario.title}
+            <img src={(graphics as { file_url: string }[] | null)?.[0]?.file_url ?? ''} alt={scenario.title}
               className="w-full h-full object-cover" />
             {!isPublished && (
               <div className="absolute inset-0 z-20 flex items-center justify-center">
@@ -95,8 +113,8 @@ export default async function WatchDetailPage({ params }: Props) {
         </h1>
         <p className="text-zinc-400 text-lg leading-relaxed mb-8">{scenario.hook}</p>
 
-        {/* Platform Links — only shown when published */}
-        {isPublished && platformLinks.length > 0 && (
+        {/* Platform Links */}
+        {platformLinks.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-10">
             {platformLinks.map(p => (
               <a key={p.key} href={p.url!} target="_blank" rel="noreferrer"
@@ -110,20 +128,20 @@ export default async function WatchDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Script — always public */}
-        {script?.body && (
+        {/* Script */}
+        {ps.show_script && script?.body && (
           <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6 mb-10">
             <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">Script</p>
             <p className="text-zinc-300 text-sm leading-loose whitespace-pre-wrap">{script.body}</p>
           </div>
         )}
 
-        {/* Graphics storyboard — always public */}
-        {(graphics?.length ?? 0) > 0 && (
+        {/* Graphics / storyboard */}
+        {ps.show_graphics && (graphics as { id: string; file_url: string; file_name: string }[] | null)?.length ? (
           <div>
             <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">Visual Storyboard</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {graphics!.map(g => (
+              {(graphics as { id: string; file_url: string; file_name: string }[]).map(g => (
                 <a key={g.id} href={g.file_url} target="_blank" rel="noreferrer">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={g.file_url} alt={g.file_name}
@@ -132,7 +150,7 @@ export default async function WatchDetailPage({ params }: Props) {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Footer */}

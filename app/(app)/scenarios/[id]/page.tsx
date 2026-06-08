@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { ScenarioWorkspace } from '@/components/scenarios/ScenarioWorkspace'
 import { formatDate } from '@/lib/utils'
+import type { PublicSettings } from '@/actions/public-settings'
 
 export const revalidate = 30
 
@@ -18,12 +19,14 @@ export default async function ScenarioDetailPage({ params }: Props) {
     { data: script },
     { data: graphics },
     { data: video },
+    { data: publicSettings },
   ] = await Promise.all([
     supabase.from('scenarios').select('*').eq('id', id).single(),
     supabase.from('prompts').select('*').eq('scenario_id', id).order('sort_order'),
     supabase.from('scripts').select('*').eq('scenario_id', id).single(),
     supabase.from('graphics').select('*').eq('scenario_id', id).order('sort_order'),
     supabase.from('videos').select('*').eq('scenario_id', id).single(),
+    supabase.from('public_settings').select('*').eq('scenario_id', id).single(),
   ])
 
   if (!scenario) notFound()
@@ -46,6 +49,7 @@ export default async function ScenarioDetailPage({ params }: Props) {
         script={script as never ?? undefined}
         graphics={(graphics ?? []) as never[]}
         video={video as never ?? undefined}
+        publicSettings={publicSettings as PublicSettings ?? null}
       />
     </div>
   )

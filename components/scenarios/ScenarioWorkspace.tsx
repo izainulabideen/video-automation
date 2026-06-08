@@ -2,12 +2,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateScenario, updateScenarioStatus } from '@/actions/scenarios'
+import { upsertPublicSettings } from '@/actions/public-settings'
+import type { PublicSettings } from '@/actions/public-settings'
 import { createPrompt } from '@/actions/prompts'
 import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp, Film, Image } from 'lucide-react'
+import { Copy, Check, ChevronDown, ChevronUp, Film, Image, Globe, Lock } from 'lucide-react'
 import { NICHES, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
 
@@ -18,11 +20,12 @@ type Graphic  = Database['public']['Tables']['graphics']['Row'] & { media_type?:
 type Video    = Database['public']['Tables']['videos']['Row']
 
 interface Props {
-  scenario: Scenario
-  prompts:  Prompt[]
-  script?:  Script
-  graphics: Graphic[]
-  video?:   Video
+  scenario:       Scenario
+  prompts:        Prompt[]
+  script?:        Script
+  graphics:       Graphic[]
+  video?:         Video
+  publicSettings: PublicSettings | null
 }
 
 const STATUS_OPTIONS = [
@@ -86,7 +89,7 @@ function MediaThumbnail({ g }: { g: Graphic }) {
   )
 }
 
-export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }: Props) {
+export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, publicSettings }: Props) {
   const router = useRouter()
   const id = scenario.id
 
@@ -94,6 +97,17 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
   const [editingDetails, setEditingDetails] = useState(false)
   const [detailSaving,   setDetailSaving]   = useState(false)
   const [statusSaving,   setStatusSaving]   = useState(false)
+  const [pubSettings, setPubSettings] = useState<PublicSettings>({
+    scenario_id:        scenario.id,
+    is_public:          publicSettings?.is_public          ?? false,
+    show_script:        publicSettings?.show_script        ?? true,
+    show_graphics:      publicSettings?.show_graphics      ?? true,
+    show_video:         publicSettings?.show_video         ?? true,
+    show_platform_links: publicSettings?.show_platform_links ?? true,
+    updated_at:         publicSettings?.updated_at,
+    updated_by:         publicSettings?.updated_by,
+  })
+  const [publicSaving, setPublicSaving] = useState(false)
 
   async function saveDetails(fd: FormData) {
     setDetailSaving(true)
@@ -108,6 +122,19 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
     await updateScenarioStatus(id, status as never)
     setStatusSaving(false)
     router.refresh()
+  }
+
+  async function savePublicSettings(next: PublicSettings) {
+    setPublicSaving(true)
+    await upsertPublicSettings(id, {
+      is_public:          next.is_public,
+      show_script:        next.show_script,
+      show_graphics:      next.show_graphics,
+      show_video:         next.show_video,
+      show_platform_links: next.show_platform_links,
+    })
+    setPubSettings(next)
+    setPublicSaving(false)
   }
 
   // ── Prompts ────────────────────────────────────────────────────────────────
@@ -251,11 +278,12 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
                 <p className="text-sm text-brand-700 mt-0.5">{f.value}</p>
               </div>
             ))}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-3 flex-wrap border-t border-brand-100 mt-2">
               <button onClick={() => setEditingDetails(true)}
                 className="border border-brand-300 rounded-md px-3 py-1.5 text-xs hover:bg-brand-100">
                 Edit Details
               </button>
+
               <div className="flex items-center gap-2">
                 <span className="text-xs text-brand-500">Status:</span>
                 <select
@@ -267,6 +295,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
                   {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
+
             </div>
           </div>
         )}
@@ -452,6 +481,79 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video }
             {videoSaving ? 'Saving…' : 'Save Video'}
           </button>
         </form>
+      </Section>
+
+      {/* Public Settings */}
+      <Section title={pubSettings.is_public ? '🌐 Public · Visible on /watch' : '🔒 Private · Hidden from /watch'} defaultOpen={false}>
+        <div className="space-y-4">
+
+          {/* Master toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg border border-brand-200 bg-brand-50">
+            <div>
+              <p className="text-sm font-medium text-brand-800">Show on public /watch page</p>
+              <p className="text-xs text-brand-500 mt-0.5">
+                {pubSettings.is_public ? 'Visible to anyone at /watch.' : 'Only your team can see this.'}
+              </p>
+            </div>
+            <button
+              onClick={() => savePublicSettings({ ...pubSettings, is_public: !pubSettings.is_public })}
+              disabled={publicSaving}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
+                pubSettings.is_public ? 'bg-green-500' : 'bg-brand-300'
+              }`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                pubSettings.is_public ? 'translate-x-6' : 'translate-x-1'
+              }`} />
+            </button>
+          </div>
+
+          {/* Per-section toggles */}
+          {pubSettings.is_public && (
+            <div className="space-y-2">
+              <p className="text-xs text-brand-500 uppercase tracking-widest font-medium">What to show publicly</p>
+              {([
+                { key: 'show_script',          label: 'Script',           desc: 'Full written script' },
+                { key: 'show_graphics',         label: 'Media / Graphics', desc: 'Images and video clips' },
+                { key: 'show_video',            label: 'Final Video',      desc: 'Embedded video player' },
+                { key: 'show_platform_links',   label: 'Platform Links',   desc: 'TikTok, YouTube, Reels' },
+              ] as { key: keyof PublicSettings; label: string; desc: string }[]).map(item => (
+                <div key={String(item.key)} className="flex items-center justify-between px-3 py-2.5 rounded-md border border-brand-200 bg-white">
+                  <div>
+                    <p className="text-sm text-brand-800">{item.label}</p>
+                    <p className="text-xs text-brand-400">{item.desc}</p>
+                  </div>
+                  <button
+                    onClick={() => savePublicSettings({ ...pubSettings, [item.key]: !pubSettings[item.key] })}
+                    disabled={publicSaving}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 ${
+                      pubSettings[item.key] ? 'bg-accent' : 'bg-brand-200'
+                    }`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
+                      pubSettings[item.key] ? 'translate-x-5' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Audit trail */}
+          {pubSettings.updated_at && (
+            <p className="text-xs text-brand-400">
+              Last updated {new Date(pubSettings.updated_at).toLocaleString()}
+              {pubSettings.updated_by ? ` by ${pubSettings.updated_by}` : ''}
+            </p>
+          )}
+
+          {pubSettings.is_public && (
+            <a href={`/watch/${id}`} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-accent hover:opacity-70 underline underline-offset-2">
+              <Globe size={12} /> View public page →
+            </a>
+          )}
+        </div>
       </Section>
 
     </div>

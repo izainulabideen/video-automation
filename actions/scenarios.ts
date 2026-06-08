@@ -53,6 +53,7 @@ export async function updateScenarioStatus(
   return { success: true, data: undefined }
 }
 
+
 export async function deleteScenario(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('scenarios').delete().eq('id', id)

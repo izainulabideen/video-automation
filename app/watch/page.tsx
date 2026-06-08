@@ -5,10 +5,18 @@ export const revalidate = 300
 
 export default async function WatchPage() {
   const supabase = createAdminClient()
-  const { data: scenarios } = await supabase
-    .from('scenarios')
-    .select('id, title, niche, hook, created_at, status')
-    .order('created_at', { ascending: false })
+
+  // Join scenarios with public_settings — only show where is_public = true
+  const { data: rows } = await supabase
+    .from('public_settings')
+    .select('scenario_id, scenarios(id, title, niche, hook, created_at, status)')
+    .eq('is_public', true)
+    .order('scenario_id')
+
+  type ScenarioRow = { id: string; title: string; niche: string; hook: string; created_at: string; status: string }
+  const scenarios = (rows ?? [])
+    .flatMap(r => (Array.isArray(r.scenarios) ? r.scenarios : r.scenarios ? [r.scenarios] : []))
+    .filter(Boolean) as ScenarioRow[]
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -28,7 +36,7 @@ export default async function WatchPage() {
 
       {/* Grid */}
       <div className="max-w-6xl mx-auto px-6 pb-24">
-        {!scenarios?.length ? (
+        {!scenarios.length ? (
           <p className="text-center text-zinc-600 py-20">No content yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
