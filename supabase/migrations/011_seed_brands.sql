@@ -1,0 +1,211 @@
+-- Seed all 10 main brands
+-- Finance is already seeded in 010_brands.sql (ON CONFLICT DO NOTHING handles duplicates)
+
+INSERT INTO brands (id, name, slug, description, theme_config) VALUES
+
+-- 1. Finance (already seeded, kept here for completeness)
+(
+  'a0000000-0000-0000-0000-000000000001',
+  'Finance',
+  'finance',
+  'Premium finance & investing education',
+  '{
+    "accent": "#C8922A", "accentH": "#E8B84B", "accentDim": "#92400e",
+    "bg": "#06080F", "surface": "#0D1117", "border": "rgba(200,146,42,0.15)",
+    "mood": "dark", "heroStyle": "cinematic", "fontWeight": "black",
+    "tagline": "Finance · Education",
+    "aiTone": "authoritative, urgent, data-driven, educational",
+    "niches": ["tax", "investing", "budgeting", "real_estate", "crypto", "business", "insurance", "retirement"],
+    "nicheLabels": {
+      "tax": "Tax Strategy", "investing": "Investing", "budgeting": "Budgeting",
+      "real_estate": "Real Estate", "crypto": "Crypto", "business": "Business",
+      "insurance": "Insurance", "retirement": "Retirement"
+    }
+  }'::jsonb
+),
+
+-- 2. Horror
+(
+  'a0000000-0000-0000-0000-000000000002',
+  'Horror',
+  'horror',
+  'Dark, psychological and supernatural horror stories',
+  '{
+    "accent": "#DC2626", "accentH": "#EF4444", "accentDim": "#7f1d1d",
+    "bg": "#030507", "surface": "#0A0A0B", "border": "rgba(220,38,38,0.15)",
+    "mood": "ultra-dark", "heroStyle": "horror", "fontWeight": "black",
+    "tagline": "Horror · Dark Stories",
+    "aiTone": "dread-inducing, suspenseful, visceral, psychological",
+    "niches": ["supernatural", "psychological", "slasher", "paranormal", "true_horror", "urban_legend"],
+    "nicheLabels": {
+      "supernatural": "Supernatural", "psychological": "Psychological", "slasher": "Slasher",
+      "paranormal": "Paranormal", "true_horror": "True Horror", "urban_legend": "Urban Legends"
+    }
+  }'::jsonb
+),
+
+-- 3. Philosophy
+(
+  'a0000000-0000-0000-0000-000000000003',
+  'Philosophy',
+  'philosophy',
+  'Deep philosophical questions and thought experiments',
+  '{
+    "accent": "#6366F1", "accentH": "#818CF8", "accentDim": "#3730a3",
+    "bg": "#05050F", "surface": "#0C0C1A", "border": "rgba(99,102,241,0.15)",
+    "mood": "deep", "heroStyle": "minimal", "fontWeight": "extrabold",
+    "tagline": "Philosophy · Ideas",
+    "aiTone": "contemplative, profound, thought-provoking, Socratic",
+    "niches": ["stoicism", "existentialism", "ethics", "metaphysics", "eastern", "thought_experiments"],
+    "nicheLabels": {
+      "stoicism": "Stoicism", "existentialism": "Existentialism", "ethics": "Ethics",
+      "metaphysics": "Metaphysics", "eastern": "Eastern Philosophy", "thought_experiments": "Thought Experiments"
+    }
+  }'::jsonb
+),
+
+-- 4. Psychology
+(
+  'a0000000-0000-0000-0000-000000000004',
+  'Psychology',
+  'psychology',
+  'Human behaviour, mental health and cognitive science',
+  '{
+    "accent": "#0D9488", "accentH": "#14B8A6", "accentDim": "#134e4a",
+    "bg": "#020B0A", "surface": "#080F0E", "border": "rgba(13,148,136,0.15)",
+    "mood": "dark", "heroStyle": "clinical", "fontWeight": "bold",
+    "tagline": "Psychology · Behaviour",
+    "aiTone": "clinical, insightful, evidence-based, revealing",
+    "niches": ["cognitive", "behavioral", "social", "personality", "mental_health", "dark_psychology"],
+    "nicheLabels": {
+      "cognitive": "Cognitive", "behavioral": "Behavioral", "social": "Social Psychology",
+      "personality": "Personality", "mental_health": "Mental Health", "dark_psychology": "Dark Psychology"
+    }
+  }'::jsonb
+),
+
+-- 5. True Crime
+(
+  'a0000000-0000-0000-0000-000000000005',
+  'True Crime',
+  'true-crime',
+  'Real criminal cases, investigations and mysteries',
+  '{
+    "accent": "#B91C1C", "accentH": "#DC2626", "accentDim": "#7f1d1d",
+    "bg": "#060404", "surface": "#0D0808", "border": "rgba(185,28,28,0.15)",
+    "mood": "ultra-dark", "heroStyle": "epic", "fontWeight": "black",
+    "tagline": "True Crime · Mysteries",
+    "aiTone": "investigative, gritty, tense, factual, gripping",
+    "niches": ["serial_killers", "cold_cases", "heists", "cults", "conspiracies", "unsolved"],
+    "nicheLabels": {
+      "serial_killers": "Serial Killers", "cold_cases": "Cold Cases", "heists": "Heists",
+      "cults": "Cults", "conspiracies": "Conspiracies", "unsolved": "Unsolved Mysteries"
+    }
+  }'::jsonb
+),
+
+-- 6. History
+(
+  'a0000000-0000-0000-0000-000000000006',
+  'History',
+  'history',
+  'Epic stories from human history',
+  '{
+    "accent": "#D97706", "accentH": "#F59E0B", "accentDim": "#92400e",
+    "bg": "#080604", "surface": "#100D08", "border": "rgba(217,119,6,0.15)",
+    "mood": "dark", "heroStyle": "epic", "fontWeight": "black",
+    "tagline": "History · Epic Stories",
+    "aiTone": "epic, narrative-driven, historically accurate, dramatic",
+    "niches": ["ancient", "wars", "empires", "explorers", "revolutions", "untold"],
+    "nicheLabels": {
+      "ancient": "Ancient History", "wars": "Wars & Battles", "empires": "Empires",
+      "explorers": "Explorers", "revolutions": "Revolutions", "untold": "Untold Stories"
+    }
+  }'::jsonb
+),
+
+-- 7. Science
+(
+  'a0000000-0000-0000-0000-000000000007',
+  'Science',
+  'science',
+  'Scientific discoveries and mind-bending facts',
+  '{
+    "accent": "#0891B2", "accentH": "#06B6D4", "accentDim": "#164e63",
+    "bg": "#020810", "surface": "#060E18", "border": "rgba(8,145,178,0.15)",
+    "mood": "dark", "heroStyle": "tech", "fontWeight": "bold",
+    "tagline": "Science · Discovery",
+    "aiTone": "curious, precise, mind-expanding, accessible",
+    "niches": ["space", "physics", "biology", "chemistry", "neuroscience", "future_tech"],
+    "nicheLabels": {
+      "space": "Space & Cosmos", "physics": "Physics", "biology": "Biology",
+      "chemistry": "Chemistry", "neuroscience": "Neuroscience", "future_tech": "Future Tech"
+    }
+  }'::jsonb
+),
+
+-- 8. Mythology
+(
+  'a0000000-0000-0000-0000-000000000008',
+  'Mythology',
+  'mythology',
+  'Ancient myths, gods and legendary tales',
+  '{
+    "accent": "#7C3AED", "accentH": "#8B5CF6", "accentDim": "#4c1d95",
+    "bg": "#060408", "surface": "#0C080F", "border": "rgba(124,58,237,0.15)",
+    "mood": "deep", "heroStyle": "mystical", "fontWeight": "black",
+    "tagline": "Mythology · Legends",
+    "aiTone": "mythic, poetic, epic, otherworldly, ancient",
+    "niches": ["greek", "norse", "egyptian", "eastern", "celtic", "aztec"],
+    "nicheLabels": {
+      "greek": "Greek Mythology", "norse": "Norse Mythology", "egyptian": "Egyptian Mythology",
+      "eastern": "Eastern Mythology", "celtic": "Celtic Myths", "aztec": "Aztec & Mayan"
+    }
+  }'::jsonb
+),
+
+-- 9. Self Improvement
+(
+  'a0000000-0000-0000-0000-000000000009',
+  'Self Improvement',
+  'self-improvement',
+  'Mindset, habits and personal transformation',
+  '{
+    "accent": "#EA580C", "accentH": "#F97316", "accentDim": "#9a3412",
+    "bg": "#080503", "surface": "#0F0A06", "border": "rgba(234,88,12,0.15)",
+    "mood": "dark", "heroStyle": "warm", "fontWeight": "black",
+    "tagline": "Growth · Mindset",
+    "aiTone": "motivating, direct, transformational, actionable",
+    "niches": ["habits", "mindset", "productivity", "relationships", "discipline", "success"],
+    "nicheLabels": {
+      "habits": "Habits", "mindset": "Mindset", "productivity": "Productivity",
+      "relationships": "Relationships", "discipline": "Discipline", "success": "Success"
+    }
+  }'::jsonb
+),
+
+-- 10. Technology
+(
+  'a0000000-0000-0000-0000-000000000010',
+  'Technology',
+  'technology',
+  'Tech trends, AI and the future of the world',
+  '{
+    "accent": "#2563EB", "accentH": "#3B82F6", "accentDim": "#1e3a8a",
+    "bg": "#020408", "surface": "#060A12", "border": "rgba(37,99,235,0.15)",
+    "mood": "dark", "heroStyle": "tech", "fontWeight": "bold",
+    "tagline": "Technology · Future",
+    "aiTone": "forward-thinking, precise, analytical, visionary",
+    "niches": ["ai", "startups", "gadgets", "cybersecurity", "biotech", "web3"],
+    "nicheLabels": {
+      "ai": "Artificial Intelligence", "startups": "Startups", "gadgets": "Gadgets",
+      "cybersecurity": "Cybersecurity", "biotech": "Biotech", "web3": "Web3"
+    }
+  }'::jsonb
+)
+
+ON CONFLICT (slug) DO UPDATE SET
+  name         = EXCLUDED.name,
+  description  = EXCLUDED.description,
+  theme_config = EXCLUDED.theme_config,
+  updated_at   = NOW();
