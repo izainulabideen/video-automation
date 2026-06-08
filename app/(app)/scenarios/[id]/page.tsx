@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
+import { DuplicateScenarioButton } from '@/components/scenarios/DuplicateScenarioButton'
 import { ScenarioWorkspace } from '@/components/scenarios/ScenarioWorkspace'
 import { formatDate } from '@/lib/utils'
 import type { PublicSettings } from '@/actions/public-settings'
@@ -48,7 +49,10 @@ export default async function ScenarioDetailPage({ params }: Props) {
             {NICHE_LABELS[scenario.niche ?? ''] ?? scenario.niche} · {formatDate(scenario.created_at)}
           </p>
         </div>
-        <ScenarioStatusBadge status={scenario.status} />
+        <div className="flex items-center gap-2">
+          <DuplicateScenarioButton id={id} />
+          <ScenarioStatusBadge status={scenario.status} />
+        </div>
       </div>
 
       <ScenarioWorkspace

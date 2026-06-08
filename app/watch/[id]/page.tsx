@@ -16,6 +16,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: s?.title ? `${s.title} — Veank Studio` : 'Veank Studio',
     description: s?.hook ?? undefined,
+    openGraph: {
+      title: s?.title ?? 'Veank Studio',
+      description: s?.hook ?? 'Cinematic finance education.',
+      type: 'article',
+      images: [{ url: '/og-default.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: s?.title ?? 'Veank Studio',
+      description: s?.hook ?? 'Cinematic finance education.',
+    },
   }
 }
 

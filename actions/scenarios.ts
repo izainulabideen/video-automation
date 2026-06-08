@@ -54,6 +54,32 @@ export async function updateScenarioStatus(
 }
 
 
+export async function duplicateScenario(id: string): Promise<ActionResult<{ id: string }>> {
+  const supabase = createAdminClient()
+  const { data: original, error: fetchError } = await supabase
+    .from('scenarios')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (fetchError || !original) return { success: false, error: fetchError?.message ?? 'Scenario not found' }
+  const { data, error } = await supabase
+    .from('scenarios')
+    .insert({
+      title:    'Copy of ' + original.title,
+      niche:    original.niche,
+      hook:     original.hook,
+      audience: original.audience ?? null,
+      emotion:  original.emotion  ?? null,
+      palette:  original.palette  ?? null,
+      notes:    original.notes    ?? null,
+      status:   'draft',
+    })
+    .select('id').single()
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/scenarios')
+  return { success: true, data: { id: data.id } }
+}
+
 export async function deleteScenario(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('scenarios').delete().eq('id', id)

@@ -47,16 +47,16 @@ export const NICHE_LABELS: Record<string, string> = {
 }
 
 export const NICHE_COLORS: Record<string, string> = {
-  wealth_secrets:    'text-amber-400',
-  career_money:      'text-sky-400',
-  money_psychology:  'text-violet-400',
-  tech_careers:      'text-cyan-400',
-  wall_street:       'text-emerald-400',
-  legal_finance:     'text-rose-400',
-  real_estate:       'text-orange-400',
-  investing:         'text-green-400',
-  tax_strategy:      'text-yellow-400',
-  other:             'text-white/40',
+  wealth_secrets:   'text-amber-400 bg-amber-400/10 border-amber-400/20',
+  career_money:     'text-sky-400 bg-sky-400/10 border-sky-400/20',
+  money_psychology: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
+  tech_careers:     'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
+  wall_street:      'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  legal_finance:    'text-red-400 bg-red-400/10 border-red-400/20',
+  real_estate:      'text-orange-400 bg-orange-400/10 border-orange-400/20',
+  investing:        'text-green-400 bg-green-400/10 border-green-400/20',
+  tax_strategy:     'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+  other:            'text-zinc-400 bg-zinc-400/10 border-zinc-400/20',
 }
 
 export const STATUS_OPTIONS = [

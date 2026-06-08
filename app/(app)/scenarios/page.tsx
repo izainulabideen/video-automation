@@ -3,12 +3,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { formatDate } from '@/lib/utils'
 import { Plus, Search, Film } from 'lucide-react'
-import { NICHE_LABELS } from '@/lib/constants'
+import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
 
 export const revalidate = 60
 
 interface Props {
-  searchParams: Promise<{ status?: string; q?: string }>
+  searchParams: Promise<{ status?: string; q?: string; sort?: string }>
 }
 
 export default async function ScenariosPage({ searchParams }: Props) {
@@ -22,7 +22,30 @@ export default async function ScenariosPage({ searchParams }: Props) {
   if (params.status) query = query.eq('status', params.status as never)
   if (params.q)      query = query.or(`title.ilike.%${params.q}%,hook.ilike.%${params.q}%`)
 
-  const { data: scenarios } = await query.order('created_at', { ascending: false }).limit(50)
+  if (params.sort === 'title')       query = query.order('title')
+  else if (params.sort === 'status') query = query.order('status')
+  else if (params.sort === 'niche')  query = query.order('niche')
+  else                               query = query.order('created_at', { ascending: false })
+
+  const { data: scenarios } = await query.limit(50)
+
+  // Build sort URLs preserving existing status/q params
+  function sortUrl(col: string) {
+    const sp = new URLSearchParams()
+    if (params.status) sp.set('status', params.status)
+    if (params.q)      sp.set('q', params.q)
+    sp.set('sort', col)
+    return `/scenarios?${sp.toString()}`
+  }
+
+  const sortColumns = [
+    { key: 'created_at', label: 'Date ↓' },
+    { key: 'title',      label: 'Title' },
+    { key: 'status',     label: 'Status' },
+    { key: 'niche',      label: 'Niche' },
+  ]
+
+  const activeSort = params.sort ?? 'created_at'
 
   const statuses = [
     { value: '',              label: 'All' },
@@ -72,6 +95,27 @@ export default async function ScenariosPage({ searchParams }: Props) {
         </form>
       </div>
 
+      {/* Sort bar */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <span className="text-[11px] text-brand-500 mr-1">Sort by:</span>
+        {sortColumns.map(col => (
+          <Link
+            key={col.key}
+            href={col.key === 'created_at'
+              ? (() => { const sp = new URLSearchParams(); if (params.status) sp.set('status', params.status); if (params.q) sp.set('q', params.q); const s = sp.toString(); return `/scenarios${s ? `?${s}` : ''}`; })()
+              : sortUrl(col.key)
+            }
+            className={`text-[11px] px-3 py-1 rounded-full border transition-all ${
+              activeSort === col.key
+                ? 'text-accent border-accent/30 bg-accent/10 font-medium'
+                : 'text-brand-500 border-white/[0.06] hover:border-white/[0.1] hover:text-brand-300'
+            }`}
+          >
+            {col.label}
+          </Link>
+        ))}
+      </div>
+
       {/* List */}
       {!scenarios?.length ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -101,7 +145,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
                 <p className="text-[11px] text-brand-500 truncate mt-0.5">{s.hook}</p>
               </div>
 
-              <span className="text-[11px] text-brand-500 hidden md:block shrink-0 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+              <span className={`text-[11px] hidden md:block shrink-0 px-2.5 py-1 rounded-full border ${NICHE_COLORS[s.niche] ?? 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20'}`}>
                 {NICHE_LABELS[s.niche] ?? s.niche}
               </span>
               <ScenarioStatusBadge status={s.status} />

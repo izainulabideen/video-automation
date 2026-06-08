@@ -1,25 +1,61 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
-import { NICHE_LABELS } from '@/lib/constants'
+import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
 
 export const revalidate = 300
 
-export default async function WatchPage() {
+interface Props {
+  searchParams: Promise<{ niche?: string; q?: string }>
+}
+
+export default async function WatchPage({ searchParams }: Props) {
+  const params = await searchParams
   const supabase = createAdminClient()
 
-  const { data: rows } = await supabase
+  let query = supabase
     .from('public_settings')
     .select('scenario_id, scenarios(id, title, niche, hook, created_at, status)')
     .eq('is_public', true)
     .order('scenario_id')
 
+  if (params.niche) {
+    query = query.eq('scenarios.niche' as never, params.niche as never)
+  }
+
+  const { data: rows } = await query
+
   type ScenarioRow = { id: string; title: string; niche: string; hook: string; created_at: string; status: string }
-  const scenarios = (rows ?? [])
+  let scenarios = (rows ?? [])
     .flatMap(r => (Array.isArray(r.scenarios) ? r.scenarios : r.scenarios ? [r.scenarios] : []))
     .filter(Boolean) as ScenarioRow[]
 
+  // Client-side niche filter (in case the join filter above doesn't work for all Supabase versions)
+  if (params.niche) {
+    scenarios = scenarios.filter(s => s.niche === params.niche)
+  }
+
+  // Title search filter
+  if (params.q) {
+    const q = params.q.toLowerCase()
+    scenarios = scenarios.filter(s => s.title.toLowerCase().includes(q))
+  }
+
   const published = scenarios.filter(s => s.status === 'published')
   const upcoming  = scenarios.filter(s => s.status !== 'published')
+
+  // Build niche pills from the full unfiltered set for nav
+  const { data: allRows } = await supabase
+    .from('public_settings')
+    .select('scenario_id, scenarios(niche)')
+    .eq('is_public', true)
+
+  const allNiches = Array.from(new Set(
+    (allRows ?? [])
+      .flatMap(r => (Array.isArray(r.scenarios) ? r.scenarios : r.scenarios ? [r.scenarios] : []))
+      .filter(Boolean)
+      .map((s: { niche: string }) => s.niche)
+      .filter(Boolean)
+  ))
 
   return (
     <div className="min-h-screen bg-[#06080F] text-white selection:bg-amber-400/20 selection:text-amber-200">
@@ -79,6 +115,47 @@ export default async function WatchPage() {
           <span className="text-[9px] tracking-[0.35em] uppercase text-white/50">Scroll</span>
         </div>
       </section>
+
+      {/* ── Filter bar ── */}
+      <div className="flex flex-wrap items-center gap-2 px-6 pb-8 max-w-7xl mx-auto">
+        {/* Niche pills */}
+        <Link
+          href="/watch"
+          className={`text-[11px] px-3.5 py-1.5 rounded-full border transition-all ${
+            !params.niche
+              ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
+              : 'text-white/30 border border-white/[0.06] hover:border-white/[0.1]'
+          }`}
+        >
+          All
+        </Link>
+        {allNiches.map(niche => (
+          <Link
+            key={niche}
+            href={`/watch?niche=${niche}`}
+            className={`text-[11px] px-3.5 py-1.5 rounded-full border transition-all ${
+              params.niche === niche
+                ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
+                : 'text-white/30 border border-white/[0.06] hover:border-white/[0.1]'
+            }`}
+          >
+            {NICHE_LABELS[niche] ?? niche}
+          </Link>
+        ))}
+
+        {/* Search */}
+        <form className="ml-auto" method="get" action="/watch">
+          {params.niche && (
+            <input type="hidden" name="niche" value={params.niche} />
+          )}
+          <input
+            name="q"
+            defaultValue={params.q ?? ''}
+            placeholder="Search stories…"
+            className="bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-1.5 text-[12px] text-white/60 placeholder-white/20 w-44 focus:outline-none focus:border-white/[0.15] focus:bg-white/[0.06] transition-all"
+          />
+        </form>
+      </div>
 
       {/* ── Published content ── */}
       <section className="max-w-7xl mx-auto px-6 pb-8">
@@ -204,7 +281,7 @@ function StoryCard({ s, dimmed }: { s: { id: string; title: string; niche: strin
 
       {/* Info */}
       <div className="p-5 bg-[#08090E]">
-        <p className="text-[10px] tracking-[0.3em] uppercase text-amber-400/50 mb-2">
+        <p className={`text-[10px] tracking-[0.3em] uppercase mb-2 ${NICHE_COLORS[s.niche] ?? 'text-amber-400/50'} opacity-50`}>
           {NICHE_LABELS[s.niche] ?? s.niche}
         </p>
         <h3 className="text-white/90 font-bold text-[15px] leading-snug mb-2 group-hover:text-white transition-colors line-clamp-2">
