@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -6,7 +6,7 @@ import Link from 'next/link'
 export const revalidate = 120
 
 export default async function ScriptsPage() {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: scripts } = await supabase
     .from('scripts')
     .select('id, body, word_count, duration_sec, scenario_id, created_at')

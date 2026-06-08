@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function ScenarioDetailPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: scenario } = await supabase
     .from('scenarios')
     .select('*')

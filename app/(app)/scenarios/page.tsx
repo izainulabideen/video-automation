@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioCard } from '@/components/scenarios/ScenarioCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { NICHES, STATUS_OPTIONS } from '@/lib/constants'
@@ -12,7 +12,7 @@ interface Props {
 
 export default async function ScenariosPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
 
   let query = supabase
     .from('scenarios')

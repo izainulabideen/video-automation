@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { PromptCard } from '@/components/prompts/PromptCard'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -7,7 +7,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function ScenarioPromptsPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: prompts } = await supabase
     .from('prompts')
     .select('id, scene_type, caption_word, prompt_text, ai_tool, sort_order, scenario_id, created_at')

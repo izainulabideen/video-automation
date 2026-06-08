@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioForm } from '@/components/scenarios/ScenarioForm'
 import { updateScenario } from '@/actions/scenarios'
 
@@ -7,7 +7,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function EditScenarioPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: scenario } = await supabase.from('scenarios').select('*').eq('id', id).single()
   if (!scenario) notFound()
 

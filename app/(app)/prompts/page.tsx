@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PromptCard } from '@/components/prompts/PromptCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { SCENE_TYPES } from '@/lib/constants'
@@ -10,7 +10,7 @@ interface Props { searchParams: Promise<{ scene_type?: string; ai_tool?: string 
 
 export default async function PromptsPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
 
   let query = supabase
     .from('prompts')

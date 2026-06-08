@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioCard } from '@/components/scenarios/ScenarioCard'
 import Link from 'next/link'
 
 export const revalidate = 300
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
 
   const [
     { count: scenarioCount },

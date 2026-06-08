@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { VideoForm } from '@/components/videos/VideoForm'
 
 interface Props { params: Promise<{ id: string }> }
 
 export default async function ScenarioVideoPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: video } = await supabase
     .from('videos')
     .select('*')

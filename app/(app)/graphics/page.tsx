@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { GraphicCard } from '@/components/graphics/GraphicCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 
 export const revalidate = 300
 
 export default async function GraphicsPage() {
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: graphics } = await supabase
     .from('graphics')
     .select('id, file_url, file_name, scene_type, caption_word, sort_order, scenario_id, prompt_id, file_size_kb, created_at')

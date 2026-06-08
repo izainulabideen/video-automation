@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ScriptEditor } from '@/components/scripts/ScriptEditor'
 
 interface Props { params: Promise<{ id: string }> }
 
 export default async function ScenarioScriptPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   const { data: script } = await supabase
     .from('scripts')
     .select('*')

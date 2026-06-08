@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { VideoCard } from '@/components/videos/VideoCard'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { STATUS_OPTIONS } from '@/lib/constants'
@@ -10,7 +10,7 @@ interface Props { searchParams: Promise<{ status?: string }> }
 
 export default async function VideosPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
 
   let query = supabase
     .from('videos')
