@@ -3,7 +3,6 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2, CheckSquare, Square, Loader2, ChevronDown } from 'lucide-react'
 import { updateScenarioStatus } from '@/actions/scenarios'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 // Client-side bulk delete — calls API route
 async function bulkDeleteScenarios(ids: string[]): Promise<void> {
