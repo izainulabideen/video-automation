@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { ScenariosFilters } from '@/components/scenarios/ScenariosFilters'
@@ -53,7 +54,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
           <p className="text-xs text-brand-400 mt-0.5">{totalCount} stories</p>
         </div>
         <div className="flex items-center gap-2">
-          <ViewToggle />
+          <Suspense fallback={null}><ViewToggle /></Suspense>
           <Link href="/scenarios/new"
             className="flex items-center gap-2 bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-4 py-2.5 hover:opacity-90 transition-all text-sm font-semibold shadow-lg shadow-accent/20">
             <Plus size={14} />
@@ -62,7 +63,7 @@ export default async function ScenariosPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {view !== 'kanban' && <ScenariosFilters />}
+      {view !== 'kanban' && <Suspense fallback={null}><ScenariosFilters /></Suspense>}
 
       {view === 'kanban' ? (
         <KanbanBoard scenarios={scenarios as never[]} />
