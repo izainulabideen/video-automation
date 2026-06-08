@@ -1,7 +1,7 @@
 import { SESSION_COOKIE } from '@/lib/session'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/auth/callback']
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/watch']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
   if (session && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/scenarios', request.url))
   }
 
   return NextResponse.next()
