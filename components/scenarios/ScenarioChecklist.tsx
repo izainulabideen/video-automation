@@ -1,8 +1,8 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { toggleChecklistItem, addChecklistItem } from '@/actions/checklist'
+import { toggleChecklistItem, addChecklistItem, deleteChecklistItem, renameChecklistItem } from '@/actions/checklist'
 import type { ChecklistItem } from '@/actions/checklist'
-import { Check, Plus, Loader2 } from 'lucide-react'
+import { Check, Plus, Loader2, Trash2, Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
@@ -17,6 +17,8 @@ export function ScenarioChecklist({ scenarioId, items: initial }: Props) {
   const [toggling, setToggling] = useState<string | null>(null)
   const [addingItem, setAddingItem] = useState(false)
   const [newLabel, setNewLabel] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editLabel, setEditLabel] = useState('')
 
   const done = items.filter(i => i.is_done).length
   const pct  = items.length ? Math.round((done / items.length) * 100) : 0
@@ -31,6 +33,30 @@ export function ScenarioChecklist({ scenarioId, items: initial }: Props) {
     startTransition(async () => {
       await toggleChecklistItem(item.id, scenarioId, next)
       setToggling(null)
+      router.refresh()
+    })
+  }
+
+  function startEdit(item: ChecklistItem) {
+    setEditingId(item.id)
+    setEditLabel(item.label)
+  }
+
+  function submitRename(id: string) {
+    if (!editLabel.trim()) return
+    const label = editLabel.trim()
+    setItems(prev => prev.map(i => i.id === id ? { ...i, label } : i))
+    setEditingId(null)
+    startTransition(async () => {
+      await renameChecklistItem(id, scenarioId, label)
+      router.refresh()
+    })
+  }
+
+  function handleDelete(id: string) {
+    setItems(prev => prev.filter(i => i.id !== id))
+    startTransition(async () => {
+      await deleteChecklistItem(id, scenarioId)
       router.refresh()
     })
   }
@@ -78,42 +104,72 @@ export function ScenarioChecklist({ scenarioId, items: initial }: Props) {
       {/* Items */}
       <div className="space-y-1.5">
         {items.map(item => (
-          <button
-            key={item.id}
-            onClick={() => toggle(item)}
-            disabled={toggling === item.id}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all group ${
-              item.is_done
-                ? 'bg-success/[0.04] border-success/15'
-                : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1]'
-            }`}
-          >
+          <div key={item.id} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all group ${
+            item.is_done
+              ? 'bg-success/[0.04] border-success/15'
+              : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1]'
+          }`}>
             {/* Checkbox */}
-            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-              item.is_done
-                ? 'bg-success border-success'
-                : 'border-white/20 group-hover:border-white/40'
-            }`}>
+            <button
+              onClick={() => toggle(item)}
+              disabled={toggling === item.id}
+              className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+                item.is_done
+                  ? 'bg-success border-success'
+                  : 'border-white/20 hover:border-white/40'
+              }`}
+            >
               {toggling === item.id
                 ? <Loader2 size={10} className="animate-spin text-white/40" />
                 : item.is_done && <Check size={11} strokeWidth={3} className="text-white" />
               }
-            </div>
+            </button>
 
-            {/* Label */}
-            <span className={`text-sm flex-1 transition-colors ${
-              item.is_done ? 'text-brand-500 line-through' : 'text-brand-200'
-            }`}>
-              {item.label}
-            </span>
+            {/* Label / edit input */}
+            {editingId === item.id ? (
+              <input
+                autoFocus
+                value={editLabel}
+                onChange={e => setEditLabel(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') submitRename(item.id); if (e.key === 'Escape') setEditingId(null) }}
+                onBlur={() => submitRename(item.id)}
+                className="flex-1 bg-transparent text-sm text-white outline-none border-b border-accent/50"
+              />
+            ) : (
+              <span
+                className={`text-sm flex-1 transition-colors ${item.is_done ? 'text-brand-500 line-through' : 'text-brand-200'}`}
+              >
+                {item.label}
+              </span>
+            )}
 
-            {/* Done by + time */}
-            {item.is_done && item.done_by && (
+            {/* Done by */}
+            {item.is_done && item.done_by && editingId !== item.id && (
               <span className="text-[10px] text-brand-600 shrink-0 hidden sm:block">
                 {item.done_by} · {item.done_at ? new Date(item.done_at).toLocaleDateString() : ''}
               </span>
             )}
-          </button>
+
+            {/* Actions */}
+            {editingId !== item.id && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <button
+                  onClick={() => startEdit(item)}
+                  className="p-1 rounded hover:bg-white/10 text-brand-600 hover:text-brand-300 transition-colors"
+                  title="Rename"
+                >
+                  <Pencil size={11} />
+                </button>
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="p-1 rounded hover:bg-danger/10 text-brand-600 hover:text-danger transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 

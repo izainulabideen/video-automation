@@ -5,6 +5,7 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -133,7 +134,10 @@ export function SortableMedia({ scenarioId, items: initial, coverGraphicId: init
   const [, startTransition] = useTransition()
   const [bulkDeleting, setBulkDeleting] = useState(false)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+  )
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event

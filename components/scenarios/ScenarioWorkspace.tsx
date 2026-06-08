@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { updateScenario, updateScenarioStatus } from '@/actions/scenarios'
 import { upsertPublicSettings } from '@/actions/public-settings'
 import type { PublicSettings } from '@/actions/public-settings'
-import { createPrompt } from '@/actions/prompts'
+import { createPrompt, updatePrompt, deletePrompt } from '@/actions/prompts'
 import { upsertScript } from '@/actions/scripts'
 import { upsertVideo } from '@/actions/videos'
 import { createGraphicRecord } from '@/actions/graphics'
@@ -14,7 +14,7 @@ import { StoryboardView } from '@/components/scenarios/StoryboardView'
 import { VideoEmbed } from '@/components/scenarios/VideoEmbed'
 import { ScriptHistory } from '@/components/scenarios/ScriptHistory'
 import { useDropzone } from 'react-dropzone'
-import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus, Layers } from 'lucide-react'
+import { Copy, Check, ChevronDown, ChevronUp, ExternalLink, Upload, Plus, Layers, Pencil, Trash2, X } from 'lucide-react'
 import type { ScriptVersion } from '@/actions/scripts'
 import { NICHES, NICHE_LABELS, PALETTES, SCENE_TYPES, VIDEO_STATUS_OPTIONS, AI_TOOL_SUGGESTIONS } from '@/lib/constants'
 import type { Database } from '@/types/database'
@@ -144,8 +144,11 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
   }
 
   // Prompts
+  const [localPrompts, setLocalPrompts] = useState(prompts)
   const [showPromptForm, setShowPromptForm] = useState(false)
   const [promptSaving,   setPromptSaving]   = useState(false)
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
+  const [editingPromptSaving, setEditingPromptSaving] = useState(false)
 
   async function savePrompt(fd: FormData) {
     setPromptSaving(true)
@@ -153,6 +156,21 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
     await createPrompt(fd)
     setPromptSaving(false)
     setShowPromptForm(false)
+    router.refresh()
+  }
+
+  async function handleDeletePrompt(promptId: string) {
+    setLocalPrompts(prev => prev.filter(p => p.id !== promptId))
+    await deletePrompt(promptId, id)
+    router.refresh()
+  }
+
+  async function handleUpdatePrompt(promptId: string, fd: FormData) {
+    setEditingPromptSaving(true)
+    fd.set('scenario_id', id)
+    await updatePrompt(promptId, fd)
+    setEditingPromptSaving(false)
+    setEditingPromptId(null)
     router.refresh()
   }
 
@@ -329,22 +347,74 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
       {/* Prompts */}
       <Section
         title="Prompts"
-        badge={<span className="text-[11px] bg-white/[0.05] border border-white/[0.07] text-brand-400 rounded-full px-2 py-0.5">{prompts.length}</span>}
+        badge={<span className="text-[11px] bg-white/[0.05] border border-white/[0.07] text-brand-400 rounded-full px-2 py-0.5">{localPrompts.length}</span>}
       >
         <div className="space-y-2.5 pt-4 mb-3">
-          {prompts.map(p => (
+          {localPrompts.map(p => (
             <div key={p.id} className="bg-white/[0.02] border border-white/[0.07] rounded-lg p-3.5">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-semibold text-brand-300 uppercase tracking-wide">{p.scene_type}</span>
-                  {p.caption_word && (
-                    <span className="text-[11px] font-mono bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">{p.caption_word}</span>
-                  )}
-                  <span className="text-[11px] text-brand-500 bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded-full">{p.ai_tool}</span>
-                </div>
-                <CopyButton text={p.prompt_text} />
-              </div>
-              <p className="text-xs font-mono bg-black/30 border border-white/[0.05] px-3 py-2 rounded-lg text-brand-300 leading-relaxed whitespace-pre-wrap">{p.prompt_text}</p>
+              {editingPromptId === p.id ? (
+                <form action={(fd) => handleUpdatePrompt(p.id, fd)} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Scene Type</label>
+                      <select name="scene_type" defaultValue={p.scene_type} required className={inputCls}>
+                        {SCENE_TYPES.map(s => (
+                          <option key={s.value} value={s.value} className="bg-[#111827]">{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Caption Word</label>
+                      <input name="caption_word" defaultValue={p.caption_word ?? ''} className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Prompt Text</label>
+                    <textarea name="prompt_text" required rows={4} defaultValue={p.prompt_text}
+                      className={`${inputCls} font-mono resize-none`} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>AI Tool</label>
+                    <input name="ai_tool" list="ai-tools-list" defaultValue={p.ai_tool ?? ''} className={inputCls} />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={editingPromptSaving}
+                      className="bg-gradient-to-r from-accent to-accent-h text-white rounded-lg px-4 py-1.5 text-xs font-semibold disabled:opacity-40">
+                      {editingPromptSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button type="button" onClick={() => setEditingPromptId(null)}
+                      className="border border-white/[0.09] rounded-lg px-3 py-1.5 text-xs text-brand-400 hover:bg-white/[0.04]">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-semibold text-brand-300 uppercase tracking-wide">{p.scene_type}</span>
+                      {p.caption_word && (
+                        <span className="text-[11px] font-mono bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">{p.caption_word}</span>
+                      )}
+                      <span className="text-[11px] text-brand-500 bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded-full">{p.ai_tool}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <CopyButton text={p.prompt_text} />
+                      <button onClick={() => setEditingPromptId(p.id)}
+                        className="bg-white/[0.04] border border-white/[0.09] rounded-md p-1.5 hover:bg-white/[0.08] text-brand-400 hover:text-brand-200 transition-all"
+                        title="Edit">
+                        <Pencil size={12} />
+                      </button>
+                      <button onClick={() => handleDeletePrompt(p.id)}
+                        className="bg-white/[0.04] border border-white/[0.09] rounded-md p-1.5 hover:bg-danger/10 text-brand-400 hover:text-danger transition-all"
+                        title="Delete">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs font-mono bg-black/30 border border-white/[0.05] px-3 py-2 rounded-lg text-brand-300 leading-relaxed whitespace-pre-wrap">{p.prompt_text}</p>
+                </>
+              )}
             </div>
           ))}
         </div>

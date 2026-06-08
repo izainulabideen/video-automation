@@ -11,14 +11,17 @@ import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
 
 export const revalidate = 0
 
+const PAGE_SIZE = 25
+
 interface Props {
-  searchParams: Promise<{ status?: string; q?: string; sort?: string; view?: string }>
+  searchParams: Promise<{ status?: string; q?: string; sort?: string; view?: string; page?: string }>
 }
 
 export default async function ScenariosPage({ searchParams }: Props) {
   const params   = await searchParams
   const supabase = createAdminClient()
   const view     = params.view ?? 'list'
+  const page     = Math.max(1, parseInt(params.page ?? '1', 10))
 
   let query = supabase
     .from('scenarios')
@@ -34,14 +37,19 @@ export default async function ScenariosPage({ searchParams }: Props) {
   else if (params.sort === 'niche')  query = query.order('niche')
   else                               query = query.order('created_at', { ascending: false })
 
-  const { data: scenarios } = await query.limit(200)
+  const { data: allScenarios } = await query.limit(500)
+  const totalCount = allScenarios?.length ?? 0
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+  const scenarios  = view === 'kanban'
+    ? allScenarios
+    : allScenarios?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-white">Scenarios</h1>
-          <p className="text-xs text-brand-400 mt-0.5">{scenarios?.length ?? 0} stories</p>
+          <p className="text-xs text-brand-400 mt-0.5">{totalCount} stories</p>
         </div>
         <div className="flex items-center gap-2">
           <ViewToggle />
@@ -95,6 +103,25 @@ export default async function ScenariosPage({ searchParams }: Props) {
             </div>
           )}
         />
+      )}
+
+      {/* Pagination */}
+      {view !== 'kanban' && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-6">
+          {page > 1 && (
+            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), page: String(page - 1) })}`}
+              className="px-4 py-2 rounded-lg border border-white/[0.09] text-sm text-brand-400 hover:text-white hover:border-accent/30 transition-all">
+              ← Prev
+            </Link>
+          )}
+          <span className="text-[11px] text-brand-600">{page} / {totalPages}</span>
+          {page < totalPages && (
+            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), page: String(page + 1) })}`}
+              className="px-4 py-2 rounded-lg border border-white/[0.09] text-sm text-brand-400 hover:text-white hover:border-accent/30 transition-all">
+              Next →
+            </Link>
+          )}
+        </div>
       )}
     </div>
   )

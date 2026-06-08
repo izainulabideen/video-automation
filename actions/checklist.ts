@@ -72,3 +72,19 @@ export async function addChecklistItem(scenarioId: string, label: string): Promi
   revalidatePath(`/scenarios/${scenarioId}`)
   return { success: true, data: undefined }
 }
+
+export async function deleteChecklistItem(id: string, scenarioId: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { error } = await db.from('checklist_items').delete().eq('id', id)
+  if (error) return { success: false, error: error.message }
+  revalidatePath(`/scenarios/${scenarioId}`)
+  return { success: true, data: undefined }
+}
+
+export async function renameChecklistItem(id: string, scenarioId: string, label: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { error } = await db.from('checklist_items').update({ label }).eq('id', id)
+  if (error) return { success: false, error: error.message }
+  revalidatePath(`/scenarios/${scenarioId}`)
+  return { success: true, data: undefined }
+}

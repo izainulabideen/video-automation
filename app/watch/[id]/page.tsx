@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { NICHE_LABELS } from '@/lib/constants'
+import { WatchClientActions } from '@/components/watch/WatchClientActions'
 
 export const revalidate = 300
 
@@ -189,6 +190,13 @@ export default async function WatchDetailPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* View counter + social share */}
+        <WatchClientActions
+          scenarioId={id}
+          title={scenario.title}
+          shareUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/watch/${id}`}
+        />
 
         {/* Script */}
         {ps.show_script && script?.body && (

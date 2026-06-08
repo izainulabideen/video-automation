@@ -27,6 +27,44 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   })
 }
 
+export async function sendCommentNotification(
+  toEmail: string,
+  commenterName: string,
+  scenarioTitle: string,
+  scenarioId: string,
+  commentBody: string
+) {
+  const url = `${BASE}/scenarios/${scenarioId}`
+  await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    subject: `${commenterName} commented on "${scenarioTitle}"`,
+    html: `
+      <p><strong>${commenterName}</strong> left a comment on <strong>${scenarioTitle}</strong>:</p>
+      <blockquote style="border-left:3px solid #C8922A;padding-left:12px;color:#666;">${commentBody}</blockquote>
+      <p><a href="${url}">View scenario →</a></p>
+    `,
+  }).catch(() => {/* silent — notifications are best-effort */})
+}
+
+export async function sendAssignmentNotification(
+  toEmail: string,
+  assignerName: string,
+  scenarioTitle: string,
+  scenarioId: string
+) {
+  const url = `${BASE}/scenarios/${scenarioId}`
+  await transporter.sendMail({
+    from: FROM,
+    to: toEmail,
+    subject: `You've been assigned to "${scenarioTitle}"`,
+    html: `
+      <p><strong>${assignerName}</strong> assigned you to <strong>${scenarioTitle}</strong>.</p>
+      <p><a href="${url}">Open scenario →</a></p>
+    `,
+  }).catch(() => {/* silent */})
+}
+
 export async function sendInviteEmail(email: string, token: string, inviterName: string) {
   const url = `${BASE}/auth/accept-invite?token=${token}`
   await transporter.sendMail({

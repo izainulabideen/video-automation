@@ -5,12 +5,15 @@ import { WatchFilters } from '@/components/watch/WatchFilters'
 
 export const revalidate = 300
 
+const PAGE_SIZE = 12
+
 interface Props {
-  searchParams: Promise<{ niche?: string; q?: string }>
+  searchParams: Promise<{ niche?: string; q?: string; page?: string }>
 }
 
 export default async function WatchPage({ searchParams }: Props) {
   const params = await searchParams
+  const page = Math.max(1, parseInt(params.page ?? '1', 10))
   const supabase = createAdminClient()
 
   let query = supabase
@@ -41,8 +44,11 @@ export default async function WatchPage({ searchParams }: Props) {
     scenarios = scenarios.filter(s => s.title.toLowerCase().includes(q))
   }
 
-  const published = scenarios.filter(s => s.status === 'published')
-  const upcoming  = scenarios.filter(s => s.status !== 'published')
+  const totalScenarios = scenarios.length
+  const totalPages = Math.ceil(totalScenarios / PAGE_SIZE)
+  const paginatedScenarios = scenarios.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const published = paginatedScenarios.filter(s => s.status === 'published')
+  const upcoming  = paginatedScenarios.filter(s => s.status !== 'published')
 
   // Build niche pills from the full unfiltered set for nav
   const { data: allRows } = await supabase
@@ -199,6 +205,25 @@ export default async function WatchPage({ searchParams }: Props) {
           </>
         )}
       </section>
+
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pb-12">
+          {page > 1 && (
+            <a href={`/watch?${new URLSearchParams({ ...(params.niche ? { niche: params.niche } : {}), ...(params.q ? { q: params.q } : {}), page: String(page - 1) })}`}
+              className="px-4 py-2 rounded-xl border border-white/[0.08] text-sm text-white/50 hover:text-white hover:border-amber-400/25 transition-all">
+              ← Prev
+            </a>
+          )}
+          <span className="text-[11px] text-white/20">{page} / {totalPages}</span>
+          {page < totalPages && (
+            <a href={`/watch?${new URLSearchParams({ ...(params.niche ? { niche: params.niche } : {}), ...(params.q ? { q: params.q } : {}), page: String(page + 1) })}`}
+              className="px-4 py-2 rounded-xl border border-white/[0.08] text-sm text-white/50 hover:text-white hover:border-amber-400/25 transition-all">
+              Next →
+            </a>
+          )}
+        </div>
+      )}
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/[0.04] py-12 px-8">

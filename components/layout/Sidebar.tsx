@@ -1,14 +1,16 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar } from 'lucide-react'
+import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/scenarios',     label: 'Scenarios', icon: Clapperboard },
-  { href: '/scenarios/new', label: 'New Story',  icon: PlusCircle },
-  { href: '/calendar',      label: 'Calendar',   icon: Calendar },
-  { href: '/settings/team', label: 'Team',        icon: Users },
+  { href: '/scenarios',        label: 'Scenarios', icon: Clapperboard },
+  { href: '/scenarios/new',    label: 'New Story',  icon: PlusCircle },
+  { href: '/calendar',         label: 'Calendar',   icon: Calendar },
+  { href: '/settings/team',    label: 'Team',        icon: Users },
+  { href: '/settings/profile', label: 'Profile',    icon: UserCircle },
+  { href: '/settings',         label: 'Settings',   icon: Settings },
 ]
 
 export function Sidebar() {
@@ -36,9 +38,11 @@ export function Sidebar() {
           const active =
             href === '/scenarios'
               ? pathname === '/scenarios' || (pathname.startsWith('/scenarios/') && pathname !== '/scenarios/new')
-              : pathname.startsWith(href) && href !== '/scenarios/new'
-                ? true
-                : pathname === href
+              : href === '/settings'
+                ? pathname === '/settings'
+                : pathname.startsWith(href) && href !== '/scenarios/new'
+                  ? true
+                  : pathname === href
           return (
             <Link
               key={href}

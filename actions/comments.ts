@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 import { logActivity } from './activity'
 import { getSession } from '@/lib/session'
+import { sendCommentNotification, sendAssignmentNotification } from '@/lib/email'
 
 export type Comment = {
   id: string
@@ -69,6 +70,24 @@ export async function addComment(
 
   if (error) return { success: false, error: error.message }
   await logActivity(scenarioId, session.name, parentId ? 'Replied to comment' : 'Added comment')
+
+  // Notify assignee if they exist and aren't the commenter
+  const { data: scenario } = await db
+    .from('scenarios')
+    .select('title, assigned_to')
+    .eq('id', scenarioId)
+    .single()
+  if (scenario?.assigned_to && scenario.assigned_to !== session.name) {
+    const { data: assignee } = await db
+      .from('users')
+      .select('email')
+      .eq('name', scenario.assigned_to)
+      .single()
+    if (assignee?.email) {
+      await sendCommentNotification(assignee.email, session.name, scenario.title, scenarioId, body)
+    }
+  }
+
   revalidatePath(`/scenarios/${scenarioId}`)
   return { success: true, data: { id: data.id } }
 }
@@ -137,6 +156,12 @@ export async function assignScenario(
   if (error) return { success: false, error: error.message }
   if (assignedTo) {
     await logActivity(scenarioId, session?.name ?? 'Unknown', `Assigned to ${assignedTo}`)
+    // Notify the assigned user
+    const { data: scenario } = await db.from('scenarios').select('title').eq('id', scenarioId).single()
+    const { data: assignee } = await db.from('users').select('email').eq('name', assignedTo).single()
+    if (assignee?.email && scenario?.title) {
+      await sendAssignmentNotification(assignee.email, session?.name ?? 'Someone', scenario.title, scenarioId)
+    }
   }
   revalidatePath(`/scenarios/${scenarioId}`)
   return { success: true, data: undefined }
