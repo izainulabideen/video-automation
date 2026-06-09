@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PipelineTracker } from '@/components/scenarios/PipelineTracker'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { DuplicateScenarioButton } from '@/components/scenarios/DuplicateScenarioButton'
 import { ScenarioWorkspace } from '@/components/scenarios/ScenarioWorkspace'
@@ -36,6 +37,10 @@ export default async function ScenarioDetailPage({ params }: Props) {
     { data: video },
     { data: publicSettings },
     { data: teamUsers },
+    { data: scriptData },
+    { data: graphicsData },
+    { data: videoData },
+    { data: publicSetting },
     checklist,
     activityLog,
     comments,
@@ -49,6 +54,10 @@ export default async function ScenarioDetailPage({ params }: Props) {
     supabase.from('videos').select('*').eq('scenario_id', id).single(),
     supabase.from('public_settings').select('*').eq('scenario_id', id).single(),
     supabase.from('users').select('name').order('name'),
+    supabase.from('scripts').select('id').eq('scenario_id', id).single(),
+    supabase.from('graphics').select('id').eq('scenario_id', id).limit(1),
+    supabase.from('videos').select('id, status').eq('scenario_id', id).single(),
+    supabase.from('public_settings').select('is_public').eq('scenario_id', id).single(),
     getOrCreateChecklist(id),
     getActivityLog(id),
     getComments(id),
@@ -57,6 +66,20 @@ export default async function ScenarioDetailPage({ params }: Props) {
   ])
 
   if (!scenario) notFound()
+
+  const hasScript   = !!scriptData
+  const hasGraphics = (graphicsData?.length ?? 0) > 0
+  const hasVideo    = !!videoData
+  const isPublished = scenario.status === 'published'
+  const isPublic    = !!publicSetting?.is_public
+
+  const pipelineSteps = [
+    { key: 'script',    label: 'Script',    done: hasScript,    active: !hasScript },
+    { key: 'graphics',  label: 'Graphics',  done: hasGraphics,  active: hasScript && !hasGraphics },
+    { key: 'video',     label: 'Video',     done: hasVideo,     active: hasGraphics && !hasVideo },
+    { key: 'published', label: 'Published', done: isPublished,  active: hasVideo && !isPublished },
+    { key: 'public',    label: 'Public',    done: isPublic,     active: isPublished && !isPublic },
+  ]
 
   const done  = checklist.filter(i => i.is_done).length
   const total = checklist.length
@@ -117,6 +140,11 @@ export default async function ScenarioDetailPage({ params }: Props) {
           <DuplicateScenarioButton id={id} />
           <ScenarioStatusBadge status={scenario.status} />
         </div>
+      </div>
+
+      {/* Pipeline tracker */}
+      <div className="mb-6 px-5 py-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+        <PipelineTracker steps={pipelineSteps} />
       </div>
 
       {/* Progress bar mini */}

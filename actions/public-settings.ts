@@ -51,3 +51,20 @@ export async function upsertPublicSettings(
   revalidatePath(`/watch/${scenarioId}`)
   return { success: true, data: undefined }
 }
+
+export async function bulkSetPublic(scenarioIds: string[], isPublic: boolean): Promise<ActionResult> {
+  const supabase = createAdminClient()
+  const rows = scenarioIds.map(id => ({
+    scenario_id: id,
+    is_public: isPublic,
+    show_script: true,
+    show_graphics: true,
+    show_video: true,
+    show_platform_links: true,
+  }))
+  const { error } = await supabase.from('public_settings').upsert(rows, { onConflict: 'scenario_id' })
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/scenarios')
+  revalidatePath('/watch')
+  return { success: true, data: undefined }
+}

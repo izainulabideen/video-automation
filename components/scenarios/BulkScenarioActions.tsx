@@ -2,8 +2,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Trash2, CheckSquare, Square, Loader2, ChevronDown } from 'lucide-react'
+import { Trash2, CheckSquare, Square, Loader2, ChevronDown, Globe, EyeOff } from 'lucide-react'
 import { updateScenarioStatus } from '@/actions/scenarios'
+import { bulkSetPublic } from '@/actions/public-settings'
 import { ScenarioStatusBadge } from '@/components/scenarios/ScenarioStatusBadge'
 import { NICHE_LABELS, NICHE_COLORS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
@@ -26,6 +27,7 @@ export function BulkScenarioActions({ scenarios }: Props) {
   const router = useRouter()
   const [selected, setSelected]     = useState<Set<string>>(new Set())
   const [deleting, setDeleting]     = useState(false)
+  const [pubLoading, setPubLoading] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
   const [, startTransition]         = useTransition()
 
@@ -90,6 +92,31 @@ export function BulkScenarioActions({ scenarios }: Props) {
               </div>
             )}
           </div>
+
+          <button
+            onClick={async () => {
+              setPubLoading(true)
+              await bulkSetPublic(Array.from(selected), true)
+              setSelected(new Set())
+              setPubLoading(false)
+            }}
+            disabled={pubLoading}
+            className="flex items-center gap-1.5 text-[11px] text-emerald-400 border border-emerald-400/20 hover:border-emerald-400/40 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+          >
+            <Globe size={12} /> Make Public
+          </button>
+          <button
+            onClick={async () => {
+              setPubLoading(true)
+              await bulkSetPublic(Array.from(selected), false)
+              setSelected(new Set())
+              setPubLoading(false)
+            }}
+            disabled={pubLoading}
+            className="flex items-center gap-1.5 text-[11px] text-brand-400 border border-white/[0.08] hover:border-white/[0.16] px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+          >
+            <EyeOff size={12} /> Make Private
+          </button>
 
           <button onClick={handleBulkDelete} disabled={deleting}
             className="flex items-center gap-1.5 text-[11px] text-danger border border-danger/20 hover:border-danger/40 hover:bg-danger/[0.06] px-3 py-1.5 rounded-lg transition-all disabled:opacity-40">
