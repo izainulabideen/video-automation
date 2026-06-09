@@ -23,6 +23,7 @@ export async function createScenario(fd: FormData): Promise<ActionResult<{ id: s
     })
     .select('id').single()
   if (error) return { success: false, error: error.message }
+  import('@/lib/webhook').then(m => m.fireWebhook('scenario.created', { id: data.id, title }))
   revalidatePath('/scenarios')
   revalidatePath('/dashboard')
   return { success: true, data: { id: data.id } }
@@ -55,6 +56,16 @@ export async function updateScenarioStatus(
   const { error } = await supabase.from('scenarios').update({ status }).eq('id', id)
   if (error) return { success: false, error: error.message }
   await logActivity(id, session?.name ?? 'Unknown', `Status changed to ${status}`)
+  if (status === 'published') {
+    const { data: s } = await supabase.from('scenarios').select('title, assigned_to').eq('id', id).single()
+    if (s?.assigned_to) {
+      const { data: u } = await supabase.from('users').select('email').eq('name', s.assigned_to).single()
+      if (u?.email) {
+        import('@/lib/email').then(m => m.sendPublishNotification([u.email], s.title, id))
+      }
+    }
+    import('@/lib/webhook').then(m => m.fireWebhook('scenario.published', { id, title: s?.title }))
+  }
   revalidatePath(`/scenarios/${id}`)
   revalidatePath('/scenarios')
   return { success: true, data: undefined }

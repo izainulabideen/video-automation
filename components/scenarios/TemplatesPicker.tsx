@@ -85,10 +85,23 @@ export const TEMPLATES: ScenarioTemplate[] = [
 
 interface Props {
   onSelect: (t: ScenarioTemplate) => void
+  brandName?: string
+  brandNiche?: string
 }
 
-export function TemplatesPicker({ onSelect }: Props) {
+export function TemplatesPicker({ onSelect, brandName, brandNiche }: Props) {
   const [open, setOpen] = useState(false)
+
+  // Sort: brand-matching niche first, then others
+  const sorted = brandNiche
+    ? [
+        ...TEMPLATES.filter(t => t.niche === brandNiche),
+        ...TEMPLATES.filter(t => t.niche !== brandNiche),
+      ]
+    : TEMPLATES
+
+  const brandMatched = brandNiche ? TEMPLATES.filter(t => t.niche === brandNiche) : []
+  const others = brandNiche ? TEMPLATES.filter(t => t.niche !== brandNiche) : TEMPLATES
 
   return (
     <div className="mb-5">
@@ -100,20 +113,50 @@ export function TemplatesPicker({ onSelect }: Props) {
       </button>
 
       {open && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {TEMPLATES.map(t => (
-            <button key={t.id} onClick={() => { onSelect(t); setOpen(false) }}
-              className="text-left p-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] hover:border-accent/25 transition-all group">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Zap size={11} className="text-accent shrink-0" />
-                <span className="text-[12px] font-semibold text-white group-hover:text-accent transition-colors">{t.name}</span>
+        <div className="mt-3 space-y-3">
+          {brandName && brandMatched.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-accent/70 uppercase tracking-wider mb-2">For {brandName}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {brandMatched.map(t => (
+                  <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
+                ))}
               </div>
-              <p className="text-[11px] text-brand-500 line-clamp-2 leading-snug">{t.hook}</p>
-              <p className="text-[10px] text-brand-600 mt-1.5">{t.niche.replace(/_/g, ' ')} · {t.sceneTypes.length} scenes</p>
-            </button>
-          ))}
+            </div>
+          )}
+          {(brandMatched.length > 0 && others.length > 0) && (
+            <div>
+              <p className="text-[10px] font-semibold text-brand-500 uppercase tracking-wider mb-2">Other templates</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {others.map(t => (
+                  <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
+                ))}
+              </div>
+            </div>
+          )}
+          {brandMatched.length === 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {sorted.map(t => (
+                <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
+  )
+}
+
+function TemplateCard({ t, onSelect, setOpen }: { t: ScenarioTemplate; onSelect: (t: ScenarioTemplate) => void; setOpen: (v: boolean) => void }) {
+  return (
+    <button onClick={() => { onSelect(t); setOpen(false) }}
+      className="text-left p-3.5 rounded-xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] hover:border-accent/25 transition-all group">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Zap size={11} className="text-accent shrink-0" />
+        <span className="text-[12px] font-semibold text-white group-hover:text-accent transition-colors">{t.name}</span>
+      </div>
+      <p className="text-[11px] text-brand-500 line-clamp-2 leading-snug">{t.hook}</p>
+      <p className="text-[10px] text-brand-600 mt-1.5">{t.niche.replace(/_/g, ' ')} · {t.sceneTypes.length} scenes</p>
+    </button>
   )
 }

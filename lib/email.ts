@@ -65,6 +65,17 @@ export async function sendAssignmentNotification(
   }).catch(() => {/* silent */})
 }
 
+export async function sendPublishNotification(toEmails: string[], scenarioTitle: string, scenarioId: string) {
+  const url = `${BASE}/watch/${scenarioId}`
+  for (const email of toEmails) {
+    await transporter.sendMail({
+      from: FROM, to: email,
+      subject: `"${scenarioTitle}" is now live`,
+      html: `<p>Your story <strong>${scenarioTitle}</strong> has been published and is now live.</p><p><a href="${url}">Watch it →</a></p>`,
+    }).catch(() => {})
+  }
+}
+
 export async function sendInviteEmail(email: string, token: string, inviterName: string) {
   const url = `${BASE}/auth/accept-invite?token=${token}`
   await transporter.sendMail({
