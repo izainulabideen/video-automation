@@ -148,7 +148,7 @@ export default async function WatchPage({ searchParams }:Props) {
 
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl border-b" style={{background:bg+'e0',borderColor:accent+'18'}}>
-        <div className="flex items-center justify-between px-4 md:px-8 py-3 gap-3">
+        <div className="flex items-center justify-between px-4 md:px-8 py-2 md:py-3 gap-3 min-h-[52px]">
           {/* Logo */}
           <Link href="/watch" className="flex items-center gap-2 shrink-0">
             <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{background:`linear-gradient(135deg,${accent},${accentH})`}}>
@@ -158,7 +158,7 @@ export default async function WatchPage({ searchParams }:Props) {
           </Link>
 
           {/* Brand switcher — scrollable on mobile */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-1 justify-center max-w-2xl">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-1 min-w-0 px-2">
             <Link href="/watch" className="text-[11px] px-3 py-1 rounded-full border whitespace-nowrap transition-all shrink-0"
               style={!params.brand?{borderColor:accent+'55',background:accent+'18',color:accentH}:{borderColor:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.4)'}}>
               All
@@ -177,7 +177,7 @@ export default async function WatchPage({ searchParams }:Props) {
       </nav>
 
       {/* HERO */}
-      <section className="relative min-h-[90vh] md:min-h-[94vh] flex flex-col items-center justify-center px-5 text-center overflow-hidden pt-16" style={{background:hero.heroBg}}>
+      <section className="relative min-h-[90vh] md:min-h-[94vh] flex flex-col items-center justify-center px-4 md:px-5 text-center overflow-hidden pt-14 md:pt-16" style={{background:hero.heroBg}}>
         {hero.heroPattern!=='none'&&<div className="absolute inset-0" style={{backgroundImage:hero.heroPattern,backgroundSize:isTech?'60px 60px':undefined}}/>}
         <div className="absolute inset-0 pointer-events-none" style={{background:hero.glowTop}}/>
         {/* Ambience */}
