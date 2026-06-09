@@ -79,6 +79,7 @@ export async function duplicateScenario(id: string): Promise<ActionResult<{ id: 
       emotion:  original.emotion  ?? null,
       palette:  original.palette  ?? null,
       notes:    original.notes    ?? null,
+      brand_id: original.brand_id ?? null,
       status:   'draft',
     })
     .select('id').single()
