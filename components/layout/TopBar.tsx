@@ -11,9 +11,9 @@ export async function TopBar() {
   const roleLabel = session?.role === 'admin' ? 'Admin' : session?.role === 'editor' ? 'Editor' : 'Viewer'
 
   return (
-    <header className="bg-[#0A0E18] border-b border-white/[0.06] px-5 py-3 flex items-center justify-between shrink-0">
+    <header className="bg-[#0A0E18] border-b border-white/[0.06] px-4 sm:px-5 h-14 flex items-center gap-3 shrink-0">
       {/* Mobile: hamburger + logo */}
-      <div className="md:hidden flex items-center gap-2.5">
+      <div className="md:hidden flex items-center gap-2.5 shrink-0">
         <MobileNav />
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-h flex items-center justify-center">
@@ -21,20 +21,20 @@ export async function TopBar() {
               <path d="M2 3.5L7 2L12 3.5V7C12 9.8 9.8 12.3 7 13C4.2 12.3 2 9.8 2 7V3.5Z" fill="white" fillOpacity="0.9"/>
             </svg>
           </div>
-          <span className="text-[13px] font-bold text-white">Veank Studio</span>
+          <span className="text-[13px] font-bold text-white">Veank</span>
         </div>
       </div>
 
-      {/* Cmd+K search — desktop inline, mobile icon */}
-      <div className="flex items-center">
+      {/* Search — fills remaining space */}
+      <div className="flex-1 flex items-center min-w-0">
         <CommandPalette />
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-3">
+      {/* Right side: user + logout */}
+      <div className="flex items-center gap-3 shrink-0">
         {session && (
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent/40 to-accent/10 border border-accent/20 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent/40 to-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
               <span className="text-[10px] font-bold text-accent">{initials}</span>
             </div>
             <div className="hidden sm:block text-right">

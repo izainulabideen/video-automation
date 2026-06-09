@@ -2,13 +2,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Clapperboard, PlusCircle, Users, ExternalLink } from 'lucide-react'
+import { Menu, X, Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/scenarios',     label: 'Scenarios', icon: Clapperboard },
-  { href: '/scenarios/new', label: 'New Story',  icon: PlusCircle },
-  { href: '/settings/team', label: 'Team',        icon: Users },
+  { href: '/scenarios',        label: 'Scenarios', icon: Clapperboard },
+  { href: '/scenarios/new',    label: 'New Story',  icon: PlusCircle },
+  { href: '/calendar',         label: 'Calendar',   icon: Calendar },
+  { href: '/settings/brands',  label: 'Brands',     icon: Layers },
+  { href: '/settings/team',    label: 'Team',       icon: Users },
+  { href: '/settings/profile', label: 'Profile',    icon: UserCircle },
+  { href: '/settings',         label: 'Settings',   icon: Settings },
 ]
 
 export function MobileNav() {
@@ -17,7 +21,6 @@ export function MobileNav() {
 
   return (
     <>
-      {/* Hamburger trigger — rendered inline wherever this component is placed */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open navigation"
@@ -26,7 +29,6 @@ export function MobileNav() {
         <Menu size={16} />
       </button>
 
-      {/* Overlay */}
       <div
         onClick={() => setOpen(false)}
         className={cn(
@@ -36,14 +38,12 @@ export function MobileNav() {
         aria-hidden="true"
       />
 
-      {/* Drawer */}
       <aside
         className={cn(
           'fixed top-0 left-0 z-50 h-full w-64 flex flex-col bg-[#0A0E18] border-r border-white/[0.06] transition-transform duration-300 ease-in-out md:hidden',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Drawer header */}
         <div className="px-5 pt-6 pb-5 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-h flex items-center justify-center shrink-0">
@@ -65,13 +65,16 @@ export function MobileNav() {
           </button>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex flex-col gap-0.5 px-3 pt-4 flex-1">
+        <nav className="flex flex-col gap-0.5 px-3 pt-4 flex-1 overflow-y-auto">
           {nav.map(({ href, label, icon: Icon }) => {
             const active =
               href === '/scenarios'
                 ? pathname === '/scenarios' || (pathname.startsWith('/scenarios/') && pathname !== '/scenarios/new')
-                : pathname === href
+                : href === '/settings'
+                  ? pathname === '/settings'
+                  : href === '/settings/brands'
+                    ? pathname.startsWith('/settings/brands')
+                    : pathname.startsWith(href)
             return (
               <Link
                 key={href}
@@ -91,7 +94,6 @@ export function MobileNav() {
           })}
         </nav>
 
-        {/* Public link */}
         <div className="px-3 pb-5 border-t border-white/[0.06] pt-4">
           <Link
             href="/watch"
