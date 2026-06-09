@@ -15,6 +15,8 @@ type ScenarioRow = { id:string; title:string; niche:string; hook:string; created
 type BrandRow = { id:string; name:string; slug:string; theme_config:BrandTheme }
 
 function heroConfig(style:string, accent:string, accentH:string, bg:string, name:string, tagline:string) {
+  // hl2Gradient: if set, rendered via <style> tag (avoids background-clip:text flash on client nav)
+  // hl2Style: non-gradient styles (letterSpacing, fontWeight etc)
   switch(style) {
     case 'horror': return {
       heroBg: `radial-gradient(ellipse at 50% 0%, ${accent}30 0%, ${bg} 55%)`,
@@ -22,7 +24,8 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       eyebrow: '— A DARK CHANNEL —', eyebrowColor: accent+'aa',
       hl1: name.toUpperCase(), hl2: 'STORIES',
       hl1Style: { color:'#fff', letterSpacing:'-0.05em', textShadow:`0 0 80px ${accent}60` },
-      hl2Style: { color: accent, letterSpacing:'-0.05em', textShadow:`0 0 40px ${accent}cc, 0 0 80px ${accent}60` },
+      hl2Style: { letterSpacing:'-0.05em' },
+      hl2Gradient: `linear-gradient(180deg,${accent} 0%,#400000 100%)`,
       sub: 'Fear has a story. Every story has a price.',
       glowTop: `radial-gradient(ellipse at 50% -10%, ${accent}40 0%, transparent 55%)`,
       divider: accent+'55', fw:'900',
@@ -33,6 +36,7 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       hl1: name, hl2: 'Stories',
       hl1Style: { color:`${accent}cc`, fontWeight:300, letterSpacing:'0.06em', fontSize:'clamp(1.2rem,4vw,3.5rem)' } as React.CSSProperties,
       hl2Style: { color:'#ffffff', fontWeight:800, letterSpacing:'-0.04em' },
+      hl2Gradient: null,
       sub: 'Ideas that change how you see everything.',
       glowTop: `radial-gradient(ellipse at 50% 30%, ${accent}12 0%, transparent 70%)`,
       divider: accent+'30', fw:'400',
@@ -44,6 +48,7 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       hl1: name, hl2: 'Analysis',
       hl1Style: { color:'#fff', letterSpacing:'0.02em', fontWeight:700 },
       hl2Style: { color:accent, letterSpacing:'0.08em', fontWeight:400, fontStyle:'italic' },
+      hl2Gradient: null,
       sub: 'Evidence-based. Precisely observed. Uncomfortably accurate.',
       glowTop: `radial-gradient(ellipse at 70% 30%, ${accent}18 0%, transparent 60%)`,
       divider: accent+'40', fw:'700',
@@ -54,7 +59,8 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       eyebrow: `✦ ${tagline} ✦`, eyebrowColor: accent+'99',
       hl1: name, hl2: 'Chronicles',
       hl1Style: { color:'#fff', letterSpacing:'-0.03em', fontWeight:900, textTransform:'uppercase' as const },
-      hl2Style: { color: accentH, letterSpacing:'-0.03em', fontWeight:900, textShadow:`0 0 40px ${accentH}aa, 0 0 80px ${accent}60` },
+      hl2Style: { letterSpacing:'-0.03em', fontWeight:900 },
+      hl2Gradient: `linear-gradient(135deg,${accentH} 0%,${accent} 60%)`,
       sub: 'The stories that shaped reality. Unfiltered.',
       glowTop: `radial-gradient(ellipse at 20% 40%, ${accent}25 0%, transparent 55%)`,
       divider: accent+'50', fw:'900',
@@ -65,7 +71,8 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       eyebrow: '⸻  Ancient · Eternal  ⸻', eyebrowColor: accent+'88',
       hl1: name, hl2: 'Legends',
       hl1Style: { color:accent+'dd', letterSpacing:'0.08em', fontWeight:800 },
-      hl2Style: { color:'#fff', letterSpacing:'-0.02em', fontWeight:900, textShadow:`0 0 40px ${accentH}cc, 0 0 100px ${accent}80` },
+      hl2Style: { letterSpacing:'-0.02em', fontWeight:900 },
+      hl2Gradient: `linear-gradient(135deg,#fff 0%,${accentH} 50%,${accent}88 100%)`,
       sub: 'Before history, there were the gods. Before the gods, there were the stories.',
       glowTop: `radial-gradient(ellipse at 30% 20%,${accent}30 0%,transparent 50%)`,
       divider: accent+'50', fw:'800',
@@ -77,6 +84,7 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       hl1: name, hl2: '// Stories',
       hl1Style: { color:'#fff', letterSpacing:'-0.02em', fontWeight:700, fontFamily:'monospace' },
       hl2Style: { color:accent, letterSpacing:'-0.01em', fontWeight:400, fontFamily:'monospace' },
+      hl2Gradient: null,
       sub: 'Signal. No noise. The future, explained.',
       glowTop: `radial-gradient(ellipse at 50% 0%,${accent}25 0%,transparent 50%)`,
       divider: accent, fw:'700',
@@ -87,7 +95,8 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       eyebrow: tagline, eyebrowColor: accentH,
       hl1: name, hl2: 'Stories',
       hl1Style: { color:'#fff', letterSpacing:'-0.04em', fontWeight:900 },
-      hl2Style: { color: accentH, letterSpacing:'-0.04em', fontWeight:900, textShadow:`0 0 40px ${accentH}bb, 0 0 80px ${accent}60` },
+      hl2Style: { letterSpacing:'-0.04em', fontWeight:900 },
+      hl2Gradient: `linear-gradient(135deg,${accentH} 0%,${accent} 100%)`,
       sub: 'The habits, mindsets and systems that actually work.',
       glowTop: `radial-gradient(ellipse at 50% 60%,${accent}30 0%,transparent 55%)`,
       divider: accentH+'55', fw:'900',
@@ -97,7 +106,8 @@ function heroConfig(style:string, accent:string, accentH:string, bg:string, name
       eyebrow: 'Veank Studio', eyebrowColor: accent+'99',
       hl1: name==='All Stories'?'Premium':name, hl2: 'Stories',
       hl1Style: { color:'#fff' },
-      hl2Style: { color: accentH, textShadow:`0 0 40px ${accentH}cc, 0 0 80px ${accent}70` },
+      hl2Style: {},
+      hl2Gradient: `linear-gradient(135deg,${accentH} 0%,${accent} 40%,${accent}88 100%)`,
       sub: 'Cinematic education. Real insights, no noise.',
       glowTop: `radial-gradient(ellipse at 50% 30%,${accent}30 0%,transparent 65%)`,
       divider: accent+'55', fw:'900',
@@ -202,10 +212,13 @@ export default async function WatchPage({ searchParams }:Props) {
           {!isTech&&<div className="w-8 md:w-12 h-px" style={{background:hero.divider}}/>}
         </div>
 
+        {/* Gradient text via <style> tag — avoids background-clip:text flash on client navigation */}
+        {hero.hl2Gradient&&<style dangerouslySetInnerHTML={{__html:`.hl2g{background:${hero.hl2Gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}`}}/>}
+
         {/* Headline */}
         <h1 className="relative z-10 leading-[0.9] tracking-tight mb-5 md:mb-6 px-2" style={{fontSize:'clamp(2.8rem,10vw,9rem)',fontWeight:hero.fw}}>
           <span className="block" style={hero.hl1Style as React.CSSProperties}>{hero.hl1}</span>
-          <span className="block mt-1" style={hero.hl2Style as React.CSSProperties}>{hero.hl2}</span>
+          <span className={`block mt-1${hero.hl2Gradient?' hl2g':''}`} style={hero.hl2Style as React.CSSProperties}>{hero.hl2}</span>
         </h1>
 
         <p className="relative z-10 max-w-xs md:max-w-md mx-auto leading-relaxed text-white/40 font-light text-sm md:text-base" style={{fontFamily:isTech?'monospace':undefined,fontStyle:style==='clinical'?'italic':undefined}}>
