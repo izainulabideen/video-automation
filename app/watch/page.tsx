@@ -5,13 +5,13 @@ import { HeroAmbience } from '@/components/watch/HeroAmbience'
 import { FadeIn } from '@/components/watch/FadeIn'
 import type { BrandTheme } from '@/types/brand'
 
-export const revalidate = 300
+export const revalidate = 60
 const PAGE_SIZE = 12
 
 interface Props {
   searchParams: Promise<{ brand?: string; niche?: string; q?: string; page?: string }>
 }
-type ScenarioRow = { id:string; title:string; niche:string; hook:string; created_at:string; status:string; brand_id:string|null }
+type ScenarioRow = { id:string; title:string; niche:string; hook:string; created_at:string; status:string; brand_id:string|null; view_count:number }
 type BrandRow = { id:string; name:string; slug:string; theme_config:BrandTheme }
 
 function heroConfig(style:string, accent:string, accentH:string, bg:string, name:string, tagline:string) {
@@ -123,7 +123,7 @@ export default async function WatchPage({ searchParams }:Props) {
   const { data: brands } = await supabase.from('brands').select('id,name,slug,theme_config').eq('is_active',true).order('name')
   const allBrands: BrandRow[] = brands??[]
 
-  const { data: rows } = await supabase.from('public_settings').select('scenario_id,scenarios(id,title,niche,hook,created_at,status,brand_id)').eq('is_public',true)
+  const { data: rows } = await supabase.from('public_settings').select('scenario_id,scenarios(id,title,niche,hook,created_at,status,brand_id,view_count)').eq('is_public',true)
   let scenarios = ((rows??[]).flatMap(r=>Array.isArray(r.scenarios)?r.scenarios:r.scenarios?[r.scenarios]:[]).filter(Boolean)) as ScenarioRow[]
 
   if(params.brand) scenarios=scenarios.filter(s=>allBrands.find(b=>b.id===s.brand_id)?.slug===params.brand)
@@ -271,6 +271,12 @@ export default async function WatchPage({ searchParams }:Props) {
                             {b&&<span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase mb-2 px-2.5 py-0.5 rounded-full border" style={{borderColor:a+'30',color:a,background:a+'12'}}><span className="w-1 h-1 rounded-full" style={{background:a}}/>{b.name}</span>}
                             <h2 className="text-xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight group-hover:text-white/90 transition-colors mt-1">{published[0].title}</h2>
                             <p className="mt-2 text-white/30 text-sm leading-relaxed line-clamp-2 hidden sm:block">{published[0].hook}</p>
+                            {published[0].view_count > 0 && (
+                              <p className="text-[10px] text-white/15 mt-2 flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                {published[0].view_count >= 1000 ? `${(published[0].view_count/1000).toFixed(1)}k` : published[0].view_count}
+                              </p>
+                            )}
                           </div>
                           <div className="absolute bottom-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{background:`linear-gradient(90deg,transparent,${aH}60,transparent)`}}/>
                         </div>
@@ -359,6 +365,12 @@ function StoryCard({s,brand,pageBg,surface,dimmed}:{s:ScenarioRow;brand?:BrandRo
         </div>
         <h3 className="text-white/90 font-bold text-[13px] md:text-[14px] leading-snug mb-1.5 group-hover:text-white transition-colors line-clamp-2">{s.title}</h3>
         <p className="text-white/25 text-[11px] md:text-xs leading-relaxed line-clamp-2">{s.hook}</p>
+        {s.view_count > 0 && (
+          <p className="text-[10px] text-white/15 mt-2 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            {s.view_count >= 1000 ? `${(s.view_count/1000).toFixed(1)}k` : s.view_count}
+          </p>
+        )}
       </div>
       <div className="absolute bottom-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{background:`linear-gradient(90deg,transparent,${a}50,transparent)`}}/>
     </Link>

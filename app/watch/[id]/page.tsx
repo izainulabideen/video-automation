@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { WatchClientActions } from '@/components/watch/WatchClientActions'
 import type { BrandTheme } from '@/types/brand'
 
-export const revalidate = 300
+export const revalidate = 60
 
 // Default theme fallback (Finance)
 const DEFAULT_THEME: BrandTheme = {

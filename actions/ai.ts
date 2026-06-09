@@ -5,6 +5,11 @@ import { NICHE_LABELS, SCENE_TYPES } from '@/lib/constants'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+interface BrandContext {
+  aiTone: string
+  name: string
+}
+
 interface ScenarioContext {
   title: string
   hook: string
@@ -13,13 +18,15 @@ interface ScenarioContext {
   emotion?: string | null
   palette?: string | null
   notes?: string | null
+  brandContext?: BrandContext
 }
 
 export async function generateScript(ctx: ScenarioContext): Promise<ActionResult<{ script: string }>> {
   if (!process.env.ANTHROPIC_API_KEY) return { success: false, error: 'ANTHROPIC_API_KEY not configured' }
 
   const nicheLabel = NICHE_LABELS[ctx.niche] ?? ctx.niche
-  const prompt = `You are an expert finance video scriptwriter for short-form social media (TikTok/Reels/YouTube Shorts).
+  const prompt = `You are an expert ${ctx.brandContext?.name ?? 'Finance'} video scriptwriter for short-form social media (TikTok/Reels/YouTube Shorts).
+Your writing style: ${ctx.brandContext?.aiTone ?? 'authoritative, urgent, data-driven, educational'}.
 
 Write a compelling voiceover script for this video:
 
@@ -51,11 +58,11 @@ Requirements:
   return { success: true, data: { script } }
 }
 
-export async function generateHooks(ctx: Pick<ScenarioContext, 'title' | 'niche' | 'audience'>): Promise<ActionResult<{ hooks: string[] }>> {
+export async function generateHooks(ctx: Pick<ScenarioContext, 'title' | 'niche' | 'audience' | 'brandContext'>): Promise<ActionResult<{ hooks: string[] }>> {
   if (!process.env.ANTHROPIC_API_KEY) return { success: false, error: 'ANTHROPIC_API_KEY not configured' }
 
   const nicheLabel = NICHE_LABELS[ctx.niche] ?? ctx.niche
-  const prompt = `Generate 5 powerful viral hooks for a finance short-form video.
+  const prompt = `Generate 5 powerful viral hooks for a ${ctx.brandContext?.name ?? 'Finance'} short-form video.
 
 Title: ${ctx.title}
 Niche: ${nicheLabel}
@@ -63,7 +70,7 @@ ${ctx.audience ? `Audience: ${ctx.audience}` : ''}
 
 Rules:
 - Each hook must be 1-2 sentences max
-- Create fear, curiosity, or disbelief
+- Match this tone: ${ctx.brandContext?.aiTone ?? 'urgent, financial, data-driven'}.
 - Use power words: "secretly", "hidden", "banned", "most people don't know"
 - No clickbait that can't be backed up
 - Output ONLY a numbered list, one hook per line, nothing else`
@@ -111,12 +118,12 @@ export async function generatePrompts(ctx: GeneratePromptsInput): Promise<Action
 
   const prompt = `You are a visual prompt engineer for AI image/video generation tools.
 
-Generate one visual prompt per scene type for a finance short-form video.
+Generate one visual prompt per scene type for a ${ctx.brandContext?.name ?? 'Finance'} short-form video.
 
 Video context:
 - Title: ${ctx.title}
 - Niche: ${nicheLabel}
-- Emotion: ${ctx.emotion ?? 'urgency'}
+- Emotion: ${ctx.emotion ?? ctx.brandContext?.aiTone ?? 'urgency'}
 ${ctx.palette ? `- Color Palette: ${ctx.palette}` : ''}
 - Script excerpt: "${ctx.script.slice(0, 300)}..."
 

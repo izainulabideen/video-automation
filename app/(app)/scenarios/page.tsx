@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getBrands } from '@/actions/brands'
 import { ScenariosFilters } from '@/components/scenarios/ScenariosFilters'
 import { KanbanBoard } from '@/components/scenarios/KanbanBoard'
 import { ViewToggle } from '@/components/scenarios/ViewToggle'
@@ -12,7 +13,7 @@ export const revalidate = 0
 const PAGE_SIZE = 25
 
 interface Props {
-  searchParams: Promise<{ status?: string; q?: string; sort?: string; view?: string; page?: string }>
+  searchParams: Promise<{ status?: string; q?: string; sort?: string; view?: string; page?: string; brand?: string }>
 }
 
 export default async function ScenariosPage({ searchParams }: Props) {
@@ -23,25 +24,31 @@ export default async function ScenariosPage({ searchParams }: Props) {
 
   let query = supabase
     .from('scenarios')
-    .select('id, title, niche, hook, status, created_at, brand:brands(name, theme_config)')
+    .select('id, title, niche, hook, status, created_at, brand_id, brand:brands(name, theme_config)')
 
   if (view !== 'kanban') {
     if (params.status) query = query.eq('status', params.status as never)
   }
   if (params.q) query = query.or(`title.ilike.%${params.q}%,hook.ilike.%${params.q}%`)
+  if (params.brand) query = query.eq('brand_id', params.brand)
 
   if (params.sort === 'title')       query = query.order('title')
   else if (params.sort === 'status') query = query.order('status')
   else if (params.sort === 'niche')  query = query.order('niche')
   else                               query = query.order('created_at', { ascending: false })
 
-  const { data: allScenarios } = await query.limit(500)
+  const [{ data: allScenarios }, brands] = await Promise.all([
+    query.limit(500),
+    getBrands(),
+  ])
   const allList    = allScenarios ?? []
   const totalCount = allList.length
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const scenarios  = view === 'kanban'
     ? allList
     : allList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const activeFilterBrands = brands.filter(b => b.is_active)
 
   return (
     <div>
@@ -60,7 +67,11 @@ export default async function ScenariosPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {view !== 'kanban' && <Suspense fallback={null}><ScenariosFilters /></Suspense>}
+      {view !== 'kanban' && (
+        <Suspense fallback={null}>
+          <ScenariosFilters brands={activeFilterBrands.map(b => ({ id: b.id, name: b.name, theme_config: { accent: b.theme_config.accent } }))} />
+        </Suspense>
+      )}
 
       {view === 'kanban' ? (
         <KanbanBoard scenarios={scenarios as never[]} />
@@ -81,14 +92,14 @@ export default async function ScenariosPage({ searchParams }: Props) {
       {view !== 'kanban' && totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 mt-6">
           {page > 1 && (
-            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), page: String(page - 1) })}`}
+            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), ...(params.brand ? { brand: params.brand } : {}), page: String(page - 1) })}`}
               className="px-4 py-2 rounded-lg border border-white/[0.09] text-sm text-brand-400 hover:text-white hover:border-accent/30 transition-all">
               ← Prev
             </Link>
           )}
           <span className="text-[11px] text-brand-600">{page} / {totalPages}</span>
           {page < totalPages && (
-            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), page: String(page + 1) })}`}
+            <Link href={`/scenarios?${new URLSearchParams({ ...(params.status ? { status: params.status } : {}), ...(params.q ? { q: params.q } : {}), ...(params.sort ? { sort: params.sort } : {}), ...(params.brand ? { brand: params.brand } : {}), page: String(page + 1) })}`}
               className="px-4 py-2 rounded-lg border border-white/[0.09] text-sm text-brand-400 hover:text-white hover:border-accent/30 transition-all">
               Next →
             </Link>

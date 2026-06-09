@@ -19,15 +19,21 @@ interface ScenarioCtx {
   notes?: string | null
 }
 
+interface BrandCtx {
+  aiTone: string
+  name: string
+}
+
 interface Props {
   scenario: ScenarioCtx
   currentScript: string
   existingPromptCount: number
+  brand?: BrandCtx | null
 }
 
 type Tab = 'script' | 'hooks' | 'prompts'
 
-export function AIGeneratePanel({ scenario, currentScript, existingPromptCount }: Props) {
+export function AIGeneratePanel({ scenario, currentScript, existingPromptCount, brand }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [tab, setTab]   = useState<Tab>('script')
@@ -63,6 +69,7 @@ export function AIGeneratePanel({ scenario, currentScript, existingPromptCount }
     emotion: scenario.emotion,
     palette: scenario.palette,
     notes: scenario.notes,
+    brandContext: brand ? { aiTone: brand.aiTone, name: brand.name } : undefined,
   }
 
   async function handleGenerateScript() {

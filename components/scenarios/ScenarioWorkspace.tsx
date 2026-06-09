@@ -236,6 +236,7 @@ export function ScenarioWorkspace({ scenario, prompts, script, graphics, video, 
         scenario={scenario}
         currentScript={scriptBody}
         existingPromptCount={prompts.length}
+        brand={brand ? { aiTone: brand.theme_config.aiTone, name: brand.name } : undefined}
       />
 
       {/* Details */}
