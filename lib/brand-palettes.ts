@@ -92,11 +92,10 @@ export const BRAND_PALETTES: Record<string, BrandPalette[]> = {
 
 /** Returns palettes for a given brand slug or niche, falling back to finance */
 export function getPalettesForBrand(slug?: string | null): BrandPalette[] {
-  if (!slug) return BRAND_PALETTES.finance
-  // Support niche-style slugs (e.g. "wealth_secrets" → "finance")
+  const fallback = BRAND_PALETTES.finance as BrandPalette[]
+  if (!slug) return fallback
   const direct = BRAND_PALETTES[slug]
   if (direct) return direct
-  // Try lowercase with hyphens normalisation
   const normalised = slug.toLowerCase().replace(/_/g, '-')
-  return BRAND_PALETTES[normalised] ?? BRAND_PALETTES.finance
+  return BRAND_PALETTES[normalised] ?? fallback
 }
