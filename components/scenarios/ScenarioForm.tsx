@@ -1,9 +1,9 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { PALETTES } from '@/lib/constants'
 import type { Database } from '@/types/database'
 import { TemplatesPicker, type ScenarioTemplate } from '@/components/scenarios/TemplatesPicker'
+import { getPalettesForBrand } from '@/lib/brand-palettes'
 import type { Brand } from '@/types/brand'
 
 type Scenario = Database['public']['Tables']['scenarios']['Row']
@@ -27,6 +27,7 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
   const activeBrand = brands.find(b => b.id === brandId)
   const niches = activeBrand?.theme_config?.niches ?? []
   const nicheLabels = activeBrand?.theme_config?.nicheLabels ?? {}
+  const palettes = getPalettesForBrand(activeBrand?.slug)
 
   const [vals, setVals] = useState({
     title:    defaultValues?.title    ?? '',
@@ -55,6 +56,7 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
           onSelect={applyTemplate}
           brandName={activeBrand?.name}
           brandNiche={activeBrand?.theme_config?.niches?.[0]}
+          brandSlug={activeBrand?.slug}
         />
       )}
 
@@ -109,7 +111,7 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
           <select name="palette" value={vals.palette} onChange={e => setVals(v => ({...v, palette: e.target.value}))}
             className={inputCls}>
             <option value="" className="bg-[#111827]">Select palette</option>
-            {PALETTES.map(p => (
+            {palettes.map(p => (
               <option key={p.value} value={p.value} className="bg-[#111827]">{p.label} — {p.use}</option>
             ))}
           </select>

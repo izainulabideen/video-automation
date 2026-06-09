@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Zap, ChevronDown, ChevronUp } from 'lucide-react'
+import { BRAND_TEMPLATES } from '@/lib/brand-templates'
 
 export type ScenarioTemplate = {
   id: string
@@ -14,94 +15,30 @@ export type ScenarioTemplate = {
   sceneTypes: string[]
 }
 
-export const TEMPLATES: ScenarioTemplate[] = [
-  {
-    id: 'wealth-trap',
-    name: 'Wealth Trap Expose',
-    niche: 'wealth_secrets',
-    title: 'The Hidden Tax Trap Draining Your Savings',
-    hook: 'The government is legally taking 40% more from you — and most people have no idea.',
-    audience: 'Middle-class earners 30-50',
-    emotion: 'Urgency + Fear',
-    palette: 'steel_blue',
-    sceneTypes: ['warning', 'legal_document', 'money_drain', 'padlock', 'chart', 'vault'],
-  },
-  {
-    id: 'career-secret',
-    name: 'Career Money Secret',
-    niche: 'career_money',
-    title: 'Why High Earners Never Negotiate Their First Offer',
-    hook: 'The single sentence that doubled my salary — and my employer was grateful.',
-    audience: 'Professionals 25-40',
-    emotion: 'Curiosity + Empowerment',
-    palette: 'cream_forest',
-    sceneTypes: ['building', 'chart', 'flow_diagram', 'money_bag', 'percentage', 'clock'],
-  },
-  {
-    id: 'investment-secret',
-    name: 'Investment Insider',
-    niche: 'investing',
-    title: 'The Index Fund Secret Wall Street Hates',
-    hook: 'Hedge funds charge 2% yearly to underperform a fund you can buy for 0.03%.',
-    audience: 'Investors 28-45',
-    emotion: 'Outrage + Curiosity',
-    palette: 'midnight_gold',
-    sceneTypes: ['chart', 'money_bag', 'wall_street', 'percentage', 'vault', 'building'],
-  },
-  {
-    id: 'tax-hack',
-    name: 'Tax Strategy Hack',
-    niche: 'tax_strategy',
-    title: 'The Legal Tax Loophole Accountants Forget to Mention',
-    hook: 'This one IRS rule could save you $10,000 this year — legally.',
-    audience: 'Self-employed 30-55',
-    emotion: 'Relief + Urgency',
-    palette: 'ice_blue',
-    sceneTypes: ['legal_document', 'percentage', 'warning', 'money_drain', 'padlock', 'chart'],
-  },
-  {
-    id: 'real-estate',
-    name: 'Real Estate Play',
-    niche: 'real_estate',
-    title: 'How to Buy Your First Property With Almost No Money Down',
-    hook: 'The strategy banks don\'t advertise that lets you own real estate with 3.5% down.',
-    audience: 'Aspiring homeowners 25-40',
-    emotion: 'Hope + Urgency',
-    palette: 'warm_amber',
-    sceneTypes: ['building', 'legal_document', 'money_bag', 'chart', 'flow_diagram', 'padlock'],
-  },
-  {
-    id: 'psychology',
-    name: 'Money Psychology',
-    niche: 'money_psychology',
-    title: 'The Psychological Trick That Keeps You Broke',
-    hook: 'Your brain is wired to lose money — here\'s the exact bias making you poor.',
-    audience: 'Anyone 20-45',
-    emotion: 'Shock + Self-awareness',
-    palette: 'lavender',
-    sceneTypes: ['warning', 'flow_diagram', 'money_drain', 'clock', 'chart', 'asset_cluster'],
-  },
-]
+/** Convert brand-templates entries to ScenarioTemplate shape (sceneTypes defaults empty) */
+function toScenarioTemplate(t: { id: string; label: string; niche: string; title: string; hook: string; audience: string; emotion: string; palette: string }): ScenarioTemplate {
+  return { ...t, name: t.label, sceneTypes: [] }
+}
+
+const ALL_BRAND_SLUGS = Object.keys(BRAND_TEMPLATES)
+
+function getTemplatesForSlug(slug: string): ScenarioTemplate[] {
+  return (BRAND_TEMPLATES[slug] ?? []).map(toScenarioTemplate)
+}
 
 interface Props {
   onSelect: (t: ScenarioTemplate) => void
   brandName?: string
   brandNiche?: string
+  /** brand slug (e.g. "horror", "finance") — if provided, shows that brand's templates first */
+  brandSlug?: string
 }
 
-export function TemplatesPicker({ onSelect, brandName, brandNiche }: Props) {
+export function TemplatesPicker({ onSelect, brandName, brandNiche, brandSlug }: Props) {
   const [open, setOpen] = useState(false)
+  const [activeSlug, setActiveSlug] = useState(brandSlug ?? 'finance')
 
-  // Sort: brand-matching niche first, then others
-  const sorted = brandNiche
-    ? [
-        ...TEMPLATES.filter(t => t.niche === brandNiche),
-        ...TEMPLATES.filter(t => t.niche !== brandNiche),
-      ]
-    : TEMPLATES
-
-  const brandMatched = brandNiche ? TEMPLATES.filter(t => t.niche === brandNiche) : []
-  const others = brandNiche ? TEMPLATES.filter(t => t.niche !== brandNiche) : TEMPLATES
+  const activeTemplates = getTemplatesForSlug(activeSlug)
 
   return (
     <div className="mb-5">
@@ -114,33 +51,27 @@ export function TemplatesPicker({ onSelect, brandName, brandNiche }: Props) {
 
       {open && (
         <div className="mt-3 space-y-3">
-          {brandName && brandMatched.length > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold text-accent/70 uppercase tracking-wider mb-2">For {brandName}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {brandMatched.map(t => (
-                  <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
-                ))}
-              </div>
-            </div>
-          )}
-          {(brandMatched.length > 0 && others.length > 0) && (
-            <div>
-              <p className="text-[10px] font-semibold text-brand-500 uppercase tracking-wider mb-2">Other templates</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {others.map(t => (
-                  <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
-                ))}
-              </div>
-            </div>
-          )}
-          {brandMatched.length === 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {sorted.map(t => (
-                <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
-              ))}
-            </div>
-          )}
+          {/* Brand tab bar */}
+          <div className="flex flex-wrap gap-1.5">
+            {ALL_BRAND_SLUGS.map(slug => (
+              <button key={slug} type="button"
+                onClick={() => setActiveSlug(slug)}
+                className={`text-[10px] px-2.5 py-1 rounded-full border transition-all capitalize ${
+                  activeSlug === slug
+                    ? 'border-accent/60 bg-accent/15 text-accent font-semibold'
+                    : 'border-white/10 bg-white/[0.03] text-white/40 hover:text-white/70 hover:border-white/20'
+                }`}>
+                {slug.replace(/-/g, ' ')}
+              </button>
+            ))}
+          </div>
+
+          {/* Templates grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {activeTemplates.map(t => (
+              <TemplateCard key={t.id} t={t} onSelect={onSelect} setOpen={setOpen} />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -156,7 +87,7 @@ function TemplateCard({ t, onSelect, setOpen }: { t: ScenarioTemplate; onSelect:
         <span className="text-[12px] font-semibold text-white group-hover:text-accent transition-colors">{t.name}</span>
       </div>
       <p className="text-[11px] text-brand-500 line-clamp-2 leading-snug">{t.hook}</p>
-      <p className="text-[10px] text-brand-600 mt-1.5">{t.niche.replace(/_/g, ' ')} · {t.sceneTypes.length} scenes</p>
+      <p className="text-[10px] text-brand-600 mt-1.5">{t.niche.replace(/_/g, ' ')}</p>
     </button>
   )
 }
