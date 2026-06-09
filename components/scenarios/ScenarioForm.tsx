@@ -50,7 +50,13 @@ export function ScenarioForm({ action, defaultValues, submitLabel = 'Save', show
 
   return (
     <form action={handleSubmit} className="space-y-5 max-w-2xl">
-      {showTemplates && <TemplatesPicker onSelect={applyTemplate} />}
+      {showTemplates && (
+        <TemplatesPicker
+          onSelect={applyTemplate}
+          brandName={activeBrand?.name}
+          brandNiche={activeBrand?.theme_config?.niches?.[0]}
+        />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Brand picker */}
