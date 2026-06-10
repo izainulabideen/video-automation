@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     images: ['/og-default.png'],
   },
   alternates: { canonical: BASE_URL },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export const viewport: Viewport = {
