@@ -19,10 +19,10 @@ export function VideoForm({ scenarioId, video }: { scenarioId: string; video?: V
   return (
     <form action={handleSubmit} className="space-y-4 max-w-xl">
       {[
-        { name: 'file_url', label: 'File URL', value: video?.file_url ?? '' },
-        { name: 'tiktok',   label: 'TikTok URL', value: platforms?.['tiktok'] ?? '' },
-        { name: 'youtube',  label: 'YouTube URL', value: platforms?.['youtube'] ?? '' },
-        { name: 'reels',    label: 'Reels URL',   value: platforms?.['reels'] ?? '' },
+        { name: 'file_url', label: 'Video File URL (MP4/WebM — Supabase Storage or CDN)', value: video?.file_url ?? '' },
+        { name: 'youtube',  label: 'YouTube URL (reference link only)', value: platforms?.['youtube'] ?? '' },
+        { name: 'tiktok',   label: 'TikTok URL (reference link only)',  value: platforms?.['tiktok'] ?? '' },
+        { name: 'reels',    label: 'Instagram Reels URL (reference link only)', value: platforms?.['reels'] ?? '' },
       ].map(f => (
         <div key={f.name}>
           <label className="text-xs text-brand-500 uppercase tracking-wide font-medium">{f.label}</label>

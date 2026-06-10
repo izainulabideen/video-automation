@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { WatchClientActions } from '@/components/watch/WatchClientActions'
+import { VideoPlayer } from '@/components/watch/VideoPlayer'
 import type { BrandTheme } from '@/types/brand'
 
 export const revalidate = 60
@@ -80,10 +81,13 @@ export default async function WatchDetailPage({ params }: Props) {
 
   const platforms = video?.platform_urls as Record<string, string> | null
   const platformLinks = ps.show_platform_links ? [
-    { key: 'tiktok',  label: 'TikTok',  icon: 'T', url: platforms?.['tiktok'] },
-    { key: 'youtube', label: 'YouTube', icon: 'Y', url: platforms?.['youtube'] },
-    { key: 'reels',   label: 'Reels',   icon: 'R', url: platforms?.['reels'] },
+    { key: 'youtube', label: 'YouTube', icon: 'YT', url: platforms?.['youtube'] },
+    { key: 'tiktok',  label: 'TikTok',  icon: 'TT', url: platforms?.['tiktok'] },
+    { key: 'reels',   label: 'Reels',   icon: 'IG', url: platforms?.['reels'] },
   ].filter(p => p.url) : []
+
+  // Only direct file URLs — no third-party embeds
+  const embedSrc = video?.file_url || null
 
   const isPublished  = scenario.status === 'published'
   const graphicsList = (graphics as { id: string; file_url: string; file_name: string }[] | null) ?? []
@@ -145,9 +149,9 @@ export default async function WatchDetailPage({ params }: Props) {
 
       {/* Hero media */}
       <div className="pt-[60px]">
-        {ps.show_video && isPublished && video?.file_url ? (
-          <div className="relative w-full bg-black" style={{ maxHeight: '75vh', aspectRatio: '16/9' }}>
-            <video src={video.file_url} controls className="w-full h-full object-contain" poster={coverImage} />
+        {ps.show_video && isPublished && embedSrc ? (
+          <div className="relative w-full bg-black">
+            <VideoPlayer src={embedSrc} poster={coverImage} title={scenario.title} />
             <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
               style={{ background: `linear-gradient(to top, ${theme.bg}, transparent)` }} />
           </div>
