@@ -3,9 +3,12 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://veank.studio'
+
 export const metadata: Metadata = {
-  title: 'Veank Studio',
-  description: 'Finance content automation platform',
+  metadataBase: new URL(BASE_URL),
+  title: { default: 'Veank Studio', template: '%s — Veank Studio' },
+  description: 'Cinematic education across finance, history, psychology, mythology and more. Real insights, no noise.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -13,16 +16,20 @@ export const metadata: Metadata = {
     title: 'Veank Studio',
   },
   openGraph: {
+    siteName: 'Veank Studio',
     title: 'Veank Studio',
-    description: 'Cinematic finance education.',
+    description: 'Cinematic education. Real insights, no noise.',
     type: 'website',
-    images: [{ url: '/og-default.png', width: 1200, height: 630 }],
+    url: BASE_URL,
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Veank Studio' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Veank Studio',
-    description: 'Cinematic finance education.',
+    description: 'Cinematic education. Real insights, no noise.',
+    images: ['/og-default.png'],
   },
+  alternates: { canonical: BASE_URL },
 }
 
 export const viewport: Viewport = {

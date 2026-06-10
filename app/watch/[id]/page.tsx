@@ -25,18 +25,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createAdminClient()
   const { data: ps } = await supabase.from('public_settings').select('scenario_id, scenarios(title, hook)').eq('scenario_id', id).eq('is_public', true).single()
   const s = ps?.scenarios as unknown as { title: string; hook: string } | null
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://veank.studio'
+  const canonical = `${base}/watch/${id}`
+  const title = s?.title ?? 'Veank Studio'
+  const description = s?.hook ?? 'Cinematic education. Real insights, no noise.'
   return {
-    title: s?.title ? `${s.title} — Veank Studio` : 'Veank Studio',
-    description: s?.hook ?? undefined,
+    title,
+    description,
+    alternates: { canonical },
     openGraph: {
-      title: s?.title ?? 'Veank Studio',
-      description: s?.hook ?? 'Cinematic content.',
+      title,
+      description,
+      url: canonical,
       type: 'article',
+      siteName: 'Veank Studio',
+      images: [{ url: '/og-default.png', width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: s?.title ?? 'Veank Studio',
-      description: s?.hook ?? 'Cinematic content.',
+      title,
+      description,
+      images: ['/og-default.png'],
     },
   }
 }
@@ -111,9 +120,33 @@ export default async function WatchDetailPage({ params }: Props) {
     bold: 700, extrabold: 800, black: 900,
   }
 
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://veank.studio'
+  const jsonLd = embedSrc
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: scenario.title,
+        description: scenario.hook,
+        contentUrl: embedSrc,
+        thumbnailUrl: coverImage ?? `${base}/og-default.png`,
+        uploadDate: new Date().toISOString(),
+        publisher: { '@type': 'Organization', name: 'Veank Studio', url: base },
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: scenario.title,
+        description: scenario.hook,
+        image: coverImage ?? `${base}/og-default.png`,
+        publisher: { '@type': 'Organization', name: 'Veank Studio', url: base },
+        url: `${base}/watch/${scenario.id}`,
+      }
+
   return (
     <div className="min-h-screen text-white selection:bg-amber-400/20 selection:text-amber-200"
       style={{ background: theme.bg }}>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Film grain */}
       <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.025]"

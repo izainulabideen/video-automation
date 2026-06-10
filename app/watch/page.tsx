@@ -4,12 +4,41 @@ import { WatchFilters } from '@/components/watch/WatchFilters'
 import { HeroAmbience } from '@/components/watch/HeroAmbience'
 import { FadeIn } from '@/components/watch/FadeIn'
 import type { BrandTheme } from '@/types/brand'
+import type { Metadata } from 'next'
 
 export const revalidate = 60
 const PAGE_SIZE = 12
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://veank.studio'
 
 interface Props {
   searchParams: Promise<{ brand?: string; niche?: string; q?: string; page?: string }>
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams
+  const supabase = createAdminClient()
+  let title = 'Watch — Veank Studio'
+  let description = 'Cinematic education across finance, history, psychology, mythology and more.'
+
+  if (params.brand) {
+    const { data: brand } = await supabase.from('brands').select('name, description').eq('slug', params.brand).single()
+    if (brand) {
+      title = `${brand.name} — Veank Studio`
+      description = brand.description ?? description
+    }
+  } else if (params.q) {
+    title = `"${params.q}" — Veank Studio`
+    description = `Stories matching "${params.q}" on Veank Studio.`
+  }
+
+  const canonical = `${BASE_URL}/watch${params.brand ? `?brand=${params.brand}` : ''}`
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 type ScenarioRow = { id:string; title:string; niche:string; hook:string; created_at:string; status:string; brand_id:string|null; view_count:number }
 type BrandRow = { id:string; name:string; slug:string; theme_config:BrandTheme }
