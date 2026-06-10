@@ -4,22 +4,23 @@ import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/app'
 import { logActivity } from './activity'
 import { getSession } from '@/lib/session'
+import { sanitizeStr } from '@/lib/sanitize'
 
 export async function createScenario(fd: FormData): Promise<ActionResult<{ id: string }>> {
   const supabase = createAdminClient()
-  const title = fd.get('title') as string
-  const niche = fd.get('niche') as string
-  const hook  = fd.get('hook')  as string
+  const title = sanitizeStr(fd.get('title'), 200)
+  const niche = sanitizeStr(fd.get('niche'), 100)
+  const hook  = sanitizeStr(fd.get('hook'), 300)
   if (!title || !niche || !hook) return { success: false, error: 'Required fields missing' }
   const { data, error } = await supabase
     .from('scenarios')
     .insert({
       title, niche, hook,
       brand_id: (fd.get('brand_id') as string) || null,
-      audience: (fd.get('audience') as string) || null,
-      emotion:  (fd.get('emotion')  as string) || null,
-      palette:  (fd.get('palette')  as string) || null,
-      notes:    (fd.get('notes')    as string) || null,
+      audience: sanitizeStr(fd.get('audience'), 200) || null,
+      emotion:  sanitizeStr(fd.get('emotion'), 200)  || null,
+      palette:  sanitizeStr(fd.get('palette'), 100)  || null,
+      notes:    sanitizeStr(fd.get('notes'), 2000)   || null,
     })
     .select('id').single()
   if (error) return { success: false, error: error.message }
@@ -33,13 +34,13 @@ export async function updateScenario(id: string, fd: FormData): Promise<ActionRe
   const supabase = createAdminClient()
   const brandId = fd.get('brand_id') as string | null
   const { error } = await supabase.from('scenarios').update({
-    title:    (fd.get('title')    as string) || undefined,
-    niche:    (fd.get('niche')    as string) || undefined,
-    hook:     (fd.get('hook')     as string) || undefined,
-    audience: (fd.get('audience') as string) || null,
-    emotion:  (fd.get('emotion')  as string) || null,
-    palette:  (fd.get('palette')  as string) || null,
-    notes:    (fd.get('notes')    as string) || null,
+    title:    sanitizeStr(fd.get('title'), 200) || undefined,
+    niche:    sanitizeStr(fd.get('niche'), 100) || undefined,
+    hook:     sanitizeStr(fd.get('hook'), 300)  || undefined,
+    audience: sanitizeStr(fd.get('audience'), 200) || null,
+    emotion:  sanitizeStr(fd.get('emotion'), 200)  || null,
+    palette:  sanitizeStr(fd.get('palette'), 100)  || null,
+    notes:    sanitizeStr(fd.get('notes'), 2000)   || null,
     brand_id: brandId || null,
   }).eq('id', id)
   if (error) return { success: false, error: error.message }

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { WatchClientActions } from '@/components/watch/WatchClientActions'
 import { VideoPlayer } from '@/components/watch/VideoPlayer'
@@ -191,8 +192,7 @@ export default async function WatchDetailPage({ params }: Props) {
           </div>
         ) : coverImage && ps.show_graphics ? (
           <div className="relative w-full overflow-hidden" style={{ maxHeight: '75vh', aspectRatio: '16/9' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverImage} alt={scenario.title} className="w-full h-full object-cover"
+            <Image src={coverImage} alt={scenario.title} fill className="object-cover"
               style={{ filter: 'brightness(0.5) contrast(1.1)' }} />
             <div className="absolute inset-0"
               style={{ background: `linear-gradient(to top, ${theme.bg} 0%, rgba(0,0,0,0.4) 50%, transparent 100%)` }} />

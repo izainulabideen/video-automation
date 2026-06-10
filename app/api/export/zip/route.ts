@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NICHE_LABELS } from '@/lib/constants'
 import JSZip from 'jszip'
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+  if (!rateLimit(ip, 5, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
   const id = req.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
