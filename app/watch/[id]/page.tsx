@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { WatchClientActions } from '@/components/watch/WatchClientActions'
 import { VideoPlayer } from '@/components/watch/VideoPlayer'
+import { Storyboard } from '@/components/watch/Storyboard'
 import type { BrandTheme } from '@/types/brand'
 
 export const revalidate = 60
@@ -326,21 +327,7 @@ export default async function WatchDetailPage({ params }: Props) {
               <div className="flex-1 h-px bg-white/[0.04]" />
               <span className="text-[10px] text-white/15">{graphicsList.length} frames</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {graphicsList.map((g, i) => (
-                <a key={g.id} href={g.file_url} target="_blank" rel="noreferrer"
-                  className="group relative block rounded-xl overflow-hidden aspect-square transition-all duration-300"
-                  style={{ border: `1px solid ${theme.accent}10` }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.file_url} alt={g.file_name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    style={{ filter: 'brightness(0.8)' }} />
-                  <span className="absolute bottom-2 left-2 text-[9px] text-white/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                </a>
-              ))}
-            </div>
+            <Storyboard frames={graphicsList} accent={theme.accent} />
           </div>
         )}
 
