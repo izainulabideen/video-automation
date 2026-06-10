@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle, Layers, LayoutDashboard, Webhook } from 'lucide-react'
+import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle, Layers, LayoutDashboard, Webhook, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
@@ -14,6 +14,7 @@ const nav = [
   { href: '/settings/profile', label: 'Profile',    icon: UserCircle },
   { href: '/settings',         label: 'Settings',   icon: Settings },
   { href: '/settings/webhooks', label: 'Webhooks',  icon: Webhook },
+  { href: '/docs',              label: 'Docs',       icon: BookOpen },
 ]
 
 export function Sidebar() {
