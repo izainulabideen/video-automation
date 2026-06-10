@@ -206,17 +206,44 @@ export default async function WatchDetailPage({ params }: Props) {
             )}
           </div>
         ) : (
-          <div className="w-full flex items-center justify-center" style={{ height: '40vh' }}>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-4"
-                style={{ borderColor: theme.accent + '15' }}>
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  style={{ color: theme.accent + '30' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <p className="text-[10px] tracking-[0.4em] uppercase" style={{ color: 'rgba(255,255,255,0.15)' }}>Coming Soon</p>
+          /* Cinematic title card — shown when no video/graphics yet */
+          <div className="relative w-full overflow-hidden flex items-end"
+            style={{
+              minHeight: '52vh',
+              background: `linear-gradient(145deg, ${theme.accent}28 0%, ${theme.bg}dd 45%, ${theme.bg} 100%)`,
+            }}>
+            {/* Ambient glow */}
+            <div className="absolute inset-0 pointer-events-none"
+              style={{background:`radial-gradient(ellipse at 25% 40%, ${theme.accent}25 0%, transparent 60%)`}}/>
+            {/* Noise grain */}
+            <div className="absolute inset-0 opacity-[0.04]"
+              style={{backgroundImage:'repeating-linear-gradient(60deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'18px 18px'}}/>
+            {/* Glow from heroStyle */}
+            <div className="absolute inset-0 pointer-events-none"
+              style={{background: heroGlow[theme.heroStyle] ?? 'none'}}/>
+            {/* Content */}
+            <div className="relative z-10 w-full px-6 md:px-12 pb-10 md:pb-14 pt-24">
+              <p className="text-[10px] tracking-[0.35em] uppercase mb-4 font-medium"
+                style={{color: theme.accent + '80'}}>{nicheLabel}</p>
+              <h1 className="font-black leading-[1.0] tracking-tight text-white max-w-3xl"
+                style={{
+                  fontSize: 'clamp(1.8rem, 5vw, 4rem)',
+                  fontWeight: headingWeight[theme.fontWeight] ?? 900,
+                }}>
+                {scenario.title}
+              </h1>
+              <p className="mt-4 text-white/35 text-base leading-relaxed max-w-xl">{scenario.hook}</p>
+              {!isPublished && (
+                <span className="inline-flex items-center gap-2 mt-6 text-[10px] tracking-[0.3em] uppercase px-3 py-1.5 rounded-full border"
+                  style={{borderColor: theme.accent + '30', color: theme.accent + '70', background: theme.accent + '0f'}}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background: theme.accent + '80'}}/>
+                  In Production
+                </span>
+              )}
             </div>
+            {/* Bottom fade */}
+            <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none"
+              style={{background:`linear-gradient(to top, ${theme.bg}, transparent)`}}/>
           </div>
         )}
       </div>

@@ -290,24 +290,68 @@ export default async function WatchPage({ searchParams }:Props) {
                   return (
                     <FadeIn delay={0}>
                       <Link href={`/watch/${published[0].id}`}
-                        className="group relative block mb-3 md:mb-4 rounded-2xl overflow-hidden border border-white/[0.06] hover:border-white/[0.14] transition-all duration-500">
-                        <div className="aspect-[16/6] md:aspect-[21/7] relative overflow-hidden flex items-end p-5 md:p-10" style={{background:`linear-gradient(135deg,${a}22 0%,${surface} 55%,${bg} 100%)`}}>
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{background:`radial-gradient(ellipse at 25% 50%,${a}20 0%,transparent 60%)`}}/>
-                          <div className="absolute right-5 md:right-10 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 flex items-center justify-center backdrop-blur-sm bg-black/20 group-hover:scale-110 transition-all duration-300">
-                            <svg className="w-5 h-5 ml-0.5 transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24" style={{color:a+'80'}}><path d="M8 5v14l11-7z"/></svg>
-                          </div>
-                          <div className="relative z-10 max-w-xl">
-                            {b&&<span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase mb-2 px-2.5 py-0.5 rounded-full border" style={{borderColor:a+'30',color:a,background:a+'12'}}><span className="w-1 h-1 rounded-full" style={{background:a}}/>{b.name}</span>}
-                            <h2 className="text-xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight group-hover:text-white/90 transition-colors mt-1">{published[0].title}</h2>
-                            <p className="mt-2 text-white/30 text-sm leading-relaxed line-clamp-2 hidden sm:block">{published[0].hook}</p>
-                            {published[0].view_count > 0 && (
-                              <p className="text-[10px] text-white/15 mt-2 flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                {published[0].view_count >= 1000 ? `${(published[0].view_count/1000).toFixed(1)}k` : published[0].view_count}
-                              </p>
+                        className="group relative block mb-3 md:mb-4 rounded-2xl overflow-hidden border border-white/[0.06] hover:border-white/[0.16] transition-all duration-500">
+                        <div className="aspect-[16/7] md:aspect-[21/7] relative overflow-hidden flex flex-col justify-between p-6 md:p-10"
+                          style={{background:`linear-gradient(135deg,${a}30 0%,${surface}cc 40%,${bg} 100%)`}}>
+
+                          {/* Background glow */}
+                          <div className="absolute inset-0 opacity-60"
+                            style={{background:`radial-gradient(ellipse at 20% 50%,${a}20 0%,transparent 55%)`}}/>
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                            style={{background:`radial-gradient(ellipse at 20% 50%,${a}30 0%,transparent 55%)`}}/>
+
+                          {/* Noise texture */}
+                          <div className="absolute inset-0 opacity-[0.03]"
+                            style={{backgroundImage:'repeating-linear-gradient(60deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'20px 20px'}}/>
+
+                          {/* Top: brand badge */}
+                          <div className="relative z-10">
+                            {b && (
+                              <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase px-3 py-1 rounded-full border font-semibold"
+                                style={{borderColor:a+'35',color:a,background:a+'15'}}>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{background:a}}/>
+                                {b.name}
+                              </span>
                             )}
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{background:`linear-gradient(90deg,transparent,${aH}60,transparent)`}}/>
+
+                          {/* Centre: featured title */}
+                          <div className="relative z-10 max-w-2xl">
+                            <p className="text-[10px] tracking-[0.3em] uppercase mb-3 font-medium" style={{color:a+'70'}}>
+                              Featured Story
+                            </p>
+                            <h2 className="font-black tracking-tight text-white leading-[1.05] group-hover:text-white/90 transition-colors"
+                              style={{fontSize:'clamp(1.4rem,4vw,3rem)'}}>
+                              {published[0].title}
+                            </h2>
+                            <p className="mt-3 text-white/35 text-sm leading-relaxed line-clamp-2 hidden sm:block max-w-xl">
+                              {published[0].hook}
+                            </p>
+
+                            {/* Watch button */}
+                            <div className="flex items-center gap-4 mt-5">
+                              <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/15 bg-white/[0.06] backdrop-blur-sm group-hover:border-white/30 group-hover:bg-white/[0.10] transition-all duration-300">
+                                <div className="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 ml-0.5 text-white/70" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                </div>
+                                <span className="text-[12px] font-semibold text-white/70 group-hover:text-white transition-colors">Watch Now</span>
+                              </div>
+                              {published[0].view_count > 0 && (
+                                <span className="text-[10px] text-white/20 flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                  </svg>
+                                  {published[0].view_count >= 1000 ? `${(published[0].view_count/1000).toFixed(1)}k views` : `${published[0].view_count} views`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            style={{background:`linear-gradient(90deg,transparent,${aH}70,transparent)`}}/>
                         </div>
                       </Link>
                     </FadeIn>
@@ -370,38 +414,86 @@ export default async function WatchPage({ searchParams }:Props) {
 }
 
 function StoryCard({s,brand,pageBg,surface,dimmed}:{s:ScenarioRow;brand?:BrandRow;pageBg:string;surface:string;dimmed?:boolean}) {
-  const a=brand?.theme_config?.accent??'#C8922A'
-  const aH=brand?.theme_config?.accentH??'#E8B84B'
-  const sBg=brand?.theme_config?.surface??surface
-  const nicheLabel=brand?.theme_config?.nicheLabels?.[s.niche]??s.niche?.replace(/_/g,' ')
+  const a   = brand?.theme_config?.accent  ?? '#C8922A'
+  const aH  = brand?.theme_config?.accentH ?? '#E8B84B'
+  const sBg = brand?.theme_config?.surface ?? surface
+  const nicheLabel = brand?.theme_config?.nicheLabels?.[s.niche] ?? s.niche?.replace(/_/g,' ')
+  const isPublished = s.status === 'published'
+
   return (
-    <Link href={`/watch/${s.id}`} className={`group relative block rounded-2xl overflow-hidden border border-white/[0.05] hover:border-white/[0.12] transition-all duration-300 h-full ${dimmed?'opacity-40':''}`}>
-      <div className="aspect-video relative overflow-hidden" style={{background:`linear-gradient(135deg,${a}15 0%,${pageBg} 100%)`}}>
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{background:`radial-gradient(ellipse at 50% 50%,${a}18 0%,transparent 70%)`}}/>
-        <div className="absolute inset-0 opacity-[0.025]" style={{backgroundImage:'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'20px 20px'}}/>
-        <div className="absolute inset-0 flex items-center justify-center">
-          {s.status==='published'?(
-            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110 backdrop-blur-sm bg-black/20">
-              <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24" style={{color:aH}}><path d="M8 5v14l11-7z"/></svg>
+    <Link href={`/watch/${s.id}`}
+      className={`group relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 h-full ${dimmed?'opacity-40':''}`}
+      style={{borderColor:'rgba(255,255,255,0.06)'}}>
+
+      {/* ── Poster / thumbnail ── */}
+      <div className="aspect-[16/10] relative overflow-hidden flex flex-col justify-between p-4 md:p-5"
+        style={{background:`linear-gradient(145deg, ${a}28 0%, ${pageBg}ee 50%, ${pageBg} 100%)`}}>
+
+        {/* Subtle noise texture */}
+        <div className="absolute inset-0 opacity-[0.04]"
+          style={{backgroundImage:'repeating-linear-gradient(60deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'14px 14px'}}/>
+
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-0 right-0 h-24 opacity-40"
+          style={{background:`radial-gradient(ellipse at 40% 0%,${a}35 0%,transparent 70%)`}}/>
+
+        {/* Top row: brand badge + status */}
+        <div className="relative z-10 flex items-start justify-between gap-2">
+          {brand && (
+            <span className="text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded-full border font-semibold"
+              style={{borderColor:a+'40',color:a,background:a+'15'}}>
+              {brand.name}
+            </span>
+          )}
+          {!isPublished && (
+            <span className="ml-auto text-[8px] tracking-[0.3em] uppercase px-2 py-1 rounded-full border text-white/30 border-white/10 bg-white/[0.04]">
+              Soon
+            </span>
+          )}
+        </div>
+
+        {/* Centre: title as poster artwork */}
+        <div className="relative z-10 flex-1 flex flex-col justify-end mt-3">
+          <p className="text-[9px] tracking-[0.25em] uppercase mb-1.5 font-medium capitalize"
+            style={{color:a+'80'}}>{nicheLabel}</p>
+          <h3 className="font-black leading-[1.1] tracking-tight text-white group-hover:text-white/90 transition-colors"
+            style={{fontSize:'clamp(0.85rem,2.2vw,1.1rem)'}}>
+            {s.title}
+          </h3>
+        </div>
+
+        {/* Bottom row: play button + views */}
+        <div className="relative z-10 flex items-center justify-between mt-3">
+          {isPublished ? (
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center border border-white/20 bg-black/30 backdrop-blur-sm group-hover:scale-110 group-hover:border-white/40 transition-all duration-300">
+                <svg className="w-3 h-3 ml-0.5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+              <span className="text-[10px] text-white/30 group-hover:text-white/50 transition-colors">Watch</span>
             </div>
-          ):<span className="text-[9px] tracking-[0.4em] uppercase text-white/15">Soon</span>}
+          ) : <div/>}
+          {s.view_count > 0 && (
+            <span className="text-[10px] text-white/20 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              {s.view_count >= 1000 ? `${(s.view_count/1000).toFixed(1)}k` : s.view_count}
+            </span>
+          )}
         </div>
+
+        {/* Bottom accent line on hover */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{background:`linear-gradient(90deg,transparent,${aH}70,transparent)`}}/>
       </div>
-      <div className="p-4 md:p-5" style={{background:sBg}}>
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          {brand&&<span className="text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded border shrink-0" style={{borderColor:a+'35',color:a,background:a+'12'}}>{brand.name}</span>}
-          {nicheLabel&&<span className="text-[10px] text-white/25 capitalize">{nicheLabel}</span>}
-        </div>
-        <h3 className="text-white/90 font-bold text-[13px] md:text-[14px] leading-snug mb-1.5 group-hover:text-white transition-colors line-clamp-2">{s.title}</h3>
-        <p className="text-white/25 text-[11px] md:text-xs leading-relaxed line-clamp-2">{s.hook}</p>
-        {s.view_count > 0 && (
-          <p className="text-[10px] text-white/15 mt-2 flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            {s.view_count >= 1000 ? `${(s.view_count/1000).toFixed(1)}k` : s.view_count}
-          </p>
-        )}
+
+      {/* ── Hook text strip ── */}
+      <div className="px-4 md:px-5 py-3 border-t border-white/[0.04]" style={{background:sBg}}>
+        <p className="text-white/35 text-[11px] leading-relaxed line-clamp-2 group-hover:text-white/50 transition-colors">{s.hook}</p>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{background:`linear-gradient(90deg,transparent,${a}50,transparent)`}}/>
     </Link>
   )
 }
