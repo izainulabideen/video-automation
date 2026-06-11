@@ -1,26 +1,21 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clapperboard, PlusCircle, Users, ExternalLink, Calendar, Settings, UserCircle, Layers, LayoutDashboard, Webhook, BookOpen } from 'lucide-react'
+import { Clapperboard, PlusCircle, Users, ExternalLink, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/dashboard',       label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/scenarios',        label: 'Scenarios', icon: Clapperboard },
-  { href: '/scenarios/new',    label: 'New Story',  icon: PlusCircle },
-  { href: '/calendar',         label: 'Calendar',   icon: Calendar },
-  { href: '/settings/brands',  label: 'Brands',     icon: Layers },
-  { href: '/settings/team',    label: 'Team',       icon: Users },
-  { href: '/settings/profile', label: 'Profile',    icon: UserCircle },
-  { href: '/settings',         label: 'Settings',   icon: Settings },
-  { href: '/settings/webhooks', label: 'Webhooks',  icon: Webhook },
-  { href: '/docs',              label: 'Docs',       icon: BookOpen },
+  { href: '/scenarios',     label: 'Scenarios', icon: Clapperboard },
+  { href: '/scenarios/new', label: 'New Story',  icon: PlusCircle },
+  { href: '/settings/team', label: 'Team',        icon: Users },
+  { href: '/docs',          label: 'Docs',         icon: BookOpen },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   return (
     <aside className="hidden md:flex w-56 flex-col shrink-0 border-r border-white/[0.06] bg-[#0A0E18]">
+      {/* Logo */}
       <div className="px-5 pt-6 pb-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-h flex items-center justify-center shrink-0">
@@ -34,31 +29,39 @@ export function Sidebar() {
           </div>
         </div>
       </div>
-      <nav className="flex flex-col gap-0.5 px-3 pt-4 flex-1 overflow-y-auto">
+
+      {/* Nav */}
+      <nav className="flex flex-col gap-0.5 px-3 pt-4 flex-1">
         {nav.map(({ href, label, icon: Icon }) => {
           const active =
             href === '/scenarios'
               ? pathname === '/scenarios' || (pathname.startsWith('/scenarios/') && pathname !== '/scenarios/new')
-              : href === '/settings'
-                ? pathname === '/settings'
-                : href === '/settings/brands'
-                  ? pathname.startsWith('/settings/brands')
-                  : pathname.startsWith(href)
+              : pathname === href
           return (
-            <Link key={href} href={href}
+            <Link
+              key={href}
+              href={href}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150',
-                active ? 'bg-accent/15 text-accent border border-accent/20' : 'text-brand-300 hover:bg-white/[0.04] hover:text-brand-100'
-              )}>
+                active
+                  ? 'bg-accent/15 text-accent border border-accent/20'
+                  : 'text-brand-300 hover:bg-white/[0.04] hover:text-brand-100'
+              )}
+            >
               <Icon size={14} strokeWidth={active ? 2.5 : 2} />
               {label}
             </Link>
           )
         })}
       </nav>
+
+      {/* Public link */}
       <div className="px-3 pb-5 border-t border-white/[0.06] pt-4">
-        <Link href="/watch" target="_blank"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] text-brand-400 hover:text-brand-200 hover:bg-white/[0.04] transition-all">
+        <Link
+          href="/watch"
+          target="_blank"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] text-brand-400 hover:text-brand-200 hover:bg-white/[0.04] transition-all"
+        >
           <ExternalLink size={13} />
           Public Page
         </Link>
@@ -66,4 +69,3 @@ export function Sidebar() {
     </aside>
   )
 }
-

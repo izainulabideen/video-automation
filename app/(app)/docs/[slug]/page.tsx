@@ -3,502 +3,430 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ChevronLeft } from 'lucide-react'
 
-interface Props { params: Promise<{ slug: string }> }
-
-const docs: Record<string, { title: string; content: React.ReactNode }> = {
-  overview: {
-    title: 'Platform Overview',
-    content: (
-      <div className="space-y-8">
-        <Section title="What is Veank Studio?">
-          <p>Veank Studio is a multi-brand video content production tool. It manages the full lifecycle of a short-form educational video — from the initial idea to a published, publicly watchable story — across multiple YouTube/social channels (called <strong>Brands</strong>).</p>
-        </Section>
-
-        <Section title="End-to-End Workflow">
-          <Steps steps={[
-            { n: '01', label: 'Create a Scenario', desc: 'A scenario is one video idea. Give it a title, hook, niche, palette, and target audience. Assign it to a brand.' },
-            { n: '02', label: 'Generate a Script', desc: 'Use AI (Claude) or write manually. The script is broken into scenes, each with a type (narration, b-roll, title card, etc.).' },
-            { n: '03', label: 'Generate AI Prompts', desc: 'Each scene automatically gets a Midjourney/DALL-E image prompt. Review and edit before sending to your AI tool.' },
-            { n: '04', label: 'Upload Graphics', desc: 'Render images from your AI tool and upload them to the scenario. They appear as a storyboard on the public page.' },
-            { n: '05', label: 'Attach a Video', desc: 'Upload your edited video to Supabase Storage or a CDN, then paste the URL. Add publish date, duration, and status.' },
-            { n: '06', label: 'Publish', desc: 'Set the scenario status to Published and toggle Public Settings to make it visible on /watch.' },
-          ]} />
-        </Section>
-
-        <Section title="Core Concepts">
-          <Table rows={[
-            ['Scenario', 'One video — the central unit of work. Contains all metadata, script, prompts, graphics, and video.'],
-            ['Brand', 'A YouTube/social channel with its own name, color theme, niches, and team members.'],
-            ['Niche', 'A content category within a brand (e.g. Finance → Tax, Investing, Economics).'],
-            ['Palette', 'A visual color scheme for the video (e.g. "Midnight Gold", "Crimson Dark").'],
-            ['Public Settings', 'Per-scenario toggles that control what appears on the public /watch page.'],
-            ['Webhook', 'An HTTPS endpoint that receives signed POST requests when scenario events happen.'],
-          ]} />
-        </Section>
-
-        <Section title="Route Map">
-          <Table rows={[
-            ['/dashboard', 'Overview of recent activity, team, and publish calendar.'],
-            ['/scenarios', 'All scenarios — filter by brand, status, niche.'],
-            ['/scenarios/new', 'Create a new scenario with optional template.'],
-            ['/scenarios/[id]', 'Scenario workspace — script, prompts, graphics, video, settings tabs.'],
-            ['/calendar', 'Monthly view of all scheduled publish dates.'],
-            ['/settings/brands', 'Create and edit brands (channels).'],
-            ['/settings/team', 'Invite and manage team members.'],
-            ['/settings/webhooks', 'Manage outbound webhook endpoints.'],
-            ['/watch', 'Public content page — visible without login.'],
-            ['/watch/[id]', 'Public detail page for a published scenario.'],
-            ['/docs', 'This documentation.'],
-          ]} />
-        </Section>
-      </div>
-    ),
-  },
-
-  scenarios: {
-    title: 'Scenarios',
-    content: (
-      <div className="space-y-8">
-        <Section title="What is a Scenario?">
-          <p>A scenario represents one video. It holds the idea metadata (title, hook, niche, audience, emotion, palette) and acts as the parent record for the script, prompts, graphics, and video.</p>
-        </Section>
-        <Section title="Status Lifecycle">
-          <Steps steps={[
-            { n: 'draft', label: 'Draft', desc: 'Initial state. Idea captured, not yet in production.' },
-            { n: 'in_production', label: 'In Production', desc: 'Script/graphics being worked on. Not yet public.' },
-            { n: 'published', label: 'Published', desc: 'Video is complete. Can be made public via Public Settings. Fires the scenario.published webhook.' },
-          ]} />
-        </Section>
-        <Section title="Fields">
-          <Table rows={[
-            ['title', 'Video title shown publicly.'],
-            ['hook', 'One-sentence hook. Shown as a subtitle on the public watch page.'],
-            ['niche', 'Content category within the brand.'],
-            ['palette', 'Visual color scheme identifier.'],
-            ['audience', 'Target viewer demographic (internal note).'],
-            ['emotion', 'Intended emotional response (internal note).'],
-            ['notes', 'Internal production notes.'],
-            ['brand_id', 'Which brand/channel this video belongs to.'],
-            ['assigned_to', 'Team member responsible for production.'],
-          ]} />
-        </Section>
-        <Section title="Public Settings">
-          <p>Each scenario has a separate public_settings record that controls what the public can see:</p>
-          <Table rows={[
-            ['is_public', 'Master toggle — must be on for the scenario to appear on /watch.'],
-            ['show_video', 'Show the video player on the watch page.'],
-            ['show_script', 'Show the full script text.'],
-            ['show_graphics', 'Show the visual storyboard.'],
-            ['show_platform_links', 'Show Watch on YouTube / TikTok / Reels buttons.'],
-          ]} />
-        </Section>
-      </div>
-    ),
-  },
-
-  scripts: {
-    title: 'Scripts',
-    content: (
-      <div className="space-y-8">
-        <Section title="Script Structure">
-          <p>A script is a versioned JSON document stored in the <code>scripts</code> table. Each script is made up of <strong>scenes</strong>. Every scene has a type, content, and optional duration.</p>
-        </Section>
-        <Section title="Scene Types">
-          <Table rows={[
-            ['hook', 'Opening scene — the attention-grabbing first 3–5 seconds.'],
-            ['narration', 'Voice-over narration over b-roll or a visual scene.'],
-            ['title_card', 'On-screen text overlay. Usually short.'],
-            ['broll', 'B-roll shot description — no spoken narration.'],
-            ['cta', 'Call to action — subscribe, follow, or engage prompt.'],
-            ['transition', 'Brief transition scene between major sections.'],
-          ]} />
-        </Section>
-        <Section title="AI Generation">
-          <p>From the Script tab, click <strong>Generate with AI</strong>. Claude writes a full multi-scene script based on the scenario title, hook, niche, audience, and emotion fields. The result is saved as a new version automatically.</p>
-        </Section>
-        <Section title="Versioning">
-          <p>Each time you save or regenerate, a new version row is created in the database. The latest version is displayed by default. Previous versions are retained.</p>
-        </Section>
-      </div>
-    ),
-  },
-
-  prompts: {
-    title: 'AI Prompts',
-    content: (
-      <div className="space-y-8">
-        <Section title="What are Prompts?">
-          <p>Each scene in a script can have a corresponding image generation prompt for Midjourney or DALL-E. Prompts live in the <code>prompts</code> table, one row per scene.</p>
-        </Section>
-        <Section title="Generation">
-          <p>From the Prompts tab, click <strong>Generate Prompts</strong>. Claude reads the script scenes and writes a cinematic image prompt for each one, taking into account the brand palette and visual style.</p>
-        </Section>
-        <Section title="Fields">
-          <Table rows={[
-            ['scene_index', 'Which scene this prompt belongs to (0-indexed).'],
-            ['tool', 'AI tool to use — midjourney or dalle3.'],
-            ['prompt_text', 'The full prompt string to paste into the AI tool.'],
-            ['negative_prompt', 'Midjourney --no parameters or DALL-E exclusions.'],
-            ['style_suffix', 'Appended style parameters (e.g. --ar 9:16 --v 6).'],
-            ['status', 'pending → generated → approved → rejected.'],
-          ]} />
-        </Section>
-        <Section title="Workflow">
-          <Steps steps={[
-            { n: '01', label: 'Generate', desc: 'AI creates prompts for all scenes at once.' },
-            { n: '02', label: 'Review & Edit', desc: 'Adjust wording, change tool, tweak style suffix per scene.' },
-            { n: '03', label: 'Copy & Use', desc: 'Use the copy button to paste the prompt into Midjourney or DALL-E.' },
-            { n: '04', label: 'Mark Approved', desc: 'Approve prompts once the generated images look good.' },
-          ]} />
-        </Section>
-      </div>
-    ),
-  },
-
-  graphics: {
-    title: 'Graphics & Storyboard',
-    content: (
-      <div className="space-y-8">
-        <Section title="What are Graphics?">
-          <p>Graphics are the rendered image frames for a scenario — one per scene or as many as needed. They are stored in Supabase Storage and referenced in the <code>graphics</code> table.</p>
-        </Section>
-        <Section title="Uploading">
-          <p>From the Graphics tab inside a scenario, drag and drop or select image files (JPG/PNG/WebP). Each file is uploaded to Supabase Storage under <code>graphics/[scenario-id]/</code> and a record is created automatically.</p>
-        </Section>
-        <Section title="Reordering">
-          <p>Drag the handle on any graphic card to reorder. The <code>sort_order</code> field controls display order on both the admin and public pages.</p>
-        </Section>
-        <Section title="Public Storyboard">
-          <p>When <strong>Show Graphics</strong> is enabled in Public Settings, the frames appear as a clickable grid on the public watch page. Clicking any frame opens a <strong>fullscreen lightbox</strong> with:</p>
-          <ul className="list-disc list-inside text-brand-300 text-sm space-y-1 mt-2">
-            <li>Backdrop blur overlay</li>
-            <li>Previous / Next navigation arrows</li>
-            <li>Keyboard shortcuts: ← → to navigate, Esc to close</li>
-            <li>Frame counter and filename caption</li>
-          </ul>
-        </Section>
-      </div>
-    ),
-  },
-
-  videos: {
-    title: 'Videos',
-    content: (
-      <div className="space-y-8">
-        <Section title="Video Hosting Policy">
-          <p className="text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-lg px-4 py-3 text-sm">
-            Veank Studio does <strong>not</strong> use paid third-party video hosting (no YouTube embeds, no Vimeo). All video playback uses self-hosted files via a native HTML5 player.
-          </p>
-        </Section>
-        <Section title="Attaching a Video">
-          <Steps steps={[
-            { n: '01', label: 'Upload File', desc: 'Upload your .mp4 or .webm file to Supabase Storage or any CDN. Copy the direct file URL.' },
-            { n: '02', label: 'Paste URL', desc: 'In the Video tab, paste the URL into the "Video File URL" field.' },
-            { n: '03', label: 'Set Metadata', desc: 'Add duration in seconds, publish date, and status (editing / exported / published).' },
-            { n: '04', label: 'Platform Links', desc: 'Optionally add YouTube / TikTok / Reels URLs as reference links. These show as "Watch on" buttons on the public page — they do not embed.' },
-          ]} />
-        </Section>
-        <Section title="Video Status">
-          <Table rows={[
-            ['editing', 'Still being edited. Not shown publicly even if scenario is public.'],
-            ['exported', 'Final export done. Ready for review.'],
-            ['published', 'Live. Shown on the public watch page if show_video is enabled.'],
-          ]} />
-        </Section>
-      </div>
-    ),
-  },
-
-  brands: {
-    title: 'Brands & Channels',
-    content: (
-      <div className="space-y-8">
-        <Section title="What is a Brand?">
-          <p>A brand represents one of your YouTube/social channels. Each brand has its own visual identity, content niches, and team members. Scenarios are always assigned to exactly one brand.</p>
-        </Section>
-        <Section title="Brand Fields">
-          <Table rows={[
-            ['name', 'Display name of the channel (e.g. "Veank Finance").'],
-            ['slug', 'URL-safe identifier — used for palette/template lookups (e.g. "finance").'],
-            ['theme_config.accent', 'Primary brand color (hex).'],
-            ['theme_config.accentH', 'Hover/highlight variant of accent color.'],
-            ['theme_config.niches', 'Array of niche slugs active for this brand.'],
-            ['theme_config.nicheLabels', 'Human-readable label for each niche slug.'],
-          ]} />
-        </Section>
-        <Section title="Brand Slugs">
-          <p>The 10 default brand slugs and their content categories:</p>
-          <Table rows={[
-            ['finance', 'Tax, investing, economics, budgeting, wealth'],
-            ['horror', 'True horror, supernatural, psychological, survival'],
-            ['philosophy', 'Ethics, metaphysics, stoicism, existentialism'],
-            ['psychology', 'Cognitive bias, behavior, persuasion, mental health'],
-            ['true-crime', 'Unsolved cases, serial killers, conspiracies, heists'],
-            ['history', 'Ancient civilizations, wars, revolutions, empires'],
-            ['science', 'Physics, biology, space, climate, technology'],
-            ['mythology', 'Greek, Norse, Egyptian, Hindu, Aztec myths'],
-            ['self-improvement', 'Productivity, habits, goals, mindset, leadership'],
-            ['technology', 'AI, cybersecurity, startups, software, innovation'],
-          ]} />
-        </Section>
-        <Section title="Palettes">
-          <p>Each brand slug has 5–6 pre-defined color palettes in <code>lib/brand-palettes.ts</code>. The palette selected on a scenario determines which color scheme is used for graphics prompts and the public watch page accent color.</p>
-        </Section>
-      </div>
-    ),
-  },
-
-  public: {
-    title: 'Public Watch Page',
-    content: (
-      <div className="space-y-8">
-        <Section title="URL Structure">
-          <Table rows={[
-            ['/watch', 'Grid of all published + public scenarios across all brands.'],
-            ['/watch/[scenario-id]', 'Detail page for one scenario.'],
-            ['/watch/brand/[slug]', 'Filtered grid showing only one brand\'s content.'],
-          ]} />
-        </Section>
-        <Section title="What Gets Shown">
-          <p>A scenario appears publicly only when <strong>both</strong> of these are true:</p>
-          <ul className="list-disc list-inside text-brand-300 text-sm space-y-1 mt-2">
-            <li>Scenario status = <code>published</code></li>
-            <li>public_settings.is_public = true</li>
-          </ul>
-          <p className="mt-3">Once visible, individual sections are controlled by the show_* toggles in Public Settings.</p>
-        </Section>
-        <Section title="Detail Page Sections">
-          <Table rows={[
-            ['Hero', 'Always shown — video player (if show_video) or cover graphic or cinematic title card.'],
-            ['Script', 'Full script text shown if show_script is enabled.'],
-            ['Storyboard', 'Image grid with lightbox if show_graphics is enabled.'],
-            ['Platform Links', 'Watch on YouTube / TikTok / Reels buttons if show_platform_links is enabled.'],
-          ]} />
-        </Section>
-        <Section title="SEO">
-          <p>Each public page has:</p>
-          <ul className="list-disc list-inside text-brand-300 text-sm space-y-1 mt-2">
-            <li>Dynamic <code>&lt;title&gt;</code> and <code>&lt;meta description&gt;</code></li>
-            <li>Open Graph image (first storyboard frame or default OG)</li>
-            <li>JSON-LD structured data (VideoObject when video present, Article otherwise)</li>
-            <li>Canonical URL</li>
-          </ul>
-        </Section>
-      </div>
-    ),
-  },
-
-  team: {
-    title: 'Team & Roles',
-    content: (
-      <div className="space-y-8">
-        <Section title="Roles">
-          <Table rows={[
-            ['admin', 'Full access — create brands, invite users, manage webhooks, delete anything.'],
-            ['editor', 'Can create and edit scenarios, scripts, prompts, graphics, and videos. Cannot manage team or webhooks.'],
-          ]} />
-        </Section>
-        <Section title="Inviting a Team Member">
-          <Steps steps={[
-            { n: '01', label: 'Go to Settings → Team', desc: 'Click Invite Member.' },
-            { n: '02', label: 'Enter Email & Role', desc: 'Choose admin or editor role.' },
-            { n: '03', label: 'Send Invite', desc: 'An email is sent with a one-time acceptance link.' },
-            { n: '04', label: 'User Accepts', desc: 'User clicks the link, sets a password, and is added to the team.' },
-          ]} />
-        </Section>
-        <Section title="Assigning Scenarios">
-          <p>Any scenario can be assigned to a specific team member from the scenario detail page. The assigned user sees the scenario highlighted in their dashboard. An assignment notification email is sent automatically. The <code>scenario.assigned</code> webhook event is also fired.</p>
-        </Section>
-        <Section title="Authentication">
-          <p>Veank Studio uses custom HMAC-SHA256 signed session cookies — <strong>not</strong> Supabase Auth. Passwords are hashed with bcrypt. Sessions expire and must be renewed by logging in again.</p>
-        </Section>
-      </div>
-    ),
-  },
-
-  webhooks: {
-    title: 'Webhooks',
-    content: (
-      <div className="space-y-8">
-        <Section title="Overview">
-          <p>Webhooks let you receive real-time notifications in your own systems when things happen in Veank Studio. A webhook is an HTTP POST sent to a URL you provide, signed with HMAC-SHA256.</p>
-        </Section>
-        <Section title="Events">
-          <Table rows={[
-            ['scenario.created', 'A new scenario was created. Payload: id, title.'],
-            ['scenario.published', 'A scenario status changed to published. Payload: id, title.'],
-            ['scenario.assigned', 'A scenario was assigned to a team member. Payload: id, title, assigned_to.'],
-          ]} />
-        </Section>
-        <Section title="Request Format">
-          <pre className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-4 text-[12px] text-brand-200 overflow-x-auto">{`POST https://your-endpoint.com/hook
-Content-Type: application/json
-X-Veank-Signature: <hmac-sha256-hex>
-
-{
-  "event": "scenario.published",
-  "data": { "id": "abc-123", "title": "The Hidden Tax Trap" },
-  "timestamp": 1749567234123
-}`}</pre>
-        </Section>
-        <Section title="Verifying the Signature">
-          <pre className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-4 text-[12px] text-brand-200 overflow-x-auto">{`const crypto = require('crypto')
-
-const sig = req.headers['x-veank-signature']
-const body = JSON.stringify(req.body)
-const expected = crypto
-  .createHmac('sha256', YOUR_WEBHOOK_SECRET)
-  .update(body)
-  .digest('hex')
-
-if (sig !== expected) return res.status(401).send('Forbidden')`}</pre>
-        </Section>
-        <Section title="Limitations">
-          <ul className="list-disc list-inside text-brand-300 text-sm space-y-1">
-            <li>No retry logic — if your endpoint is down, the event is lost.</li>
-            <li>No delivery log — past webhook calls are not stored.</li>
-            <li>Only admins can create or delete webhooks.</li>
-          </ul>
-        </Section>
-      </div>
-    ),
-  },
-
-  settings: {
-    title: 'Settings',
-    content: (
-      <div className="space-y-8">
-        <Section title="Settings Pages">
-          <Table rows={[
-            ['/settings', 'Global app defaults — default niche, palette, AI tool preference.'],
-            ['/settings/profile', 'Your name, email, and password.'],
-            ['/settings/brands', 'Create, edit, and theme your brand channels.'],
-            ['/settings/team', 'Invite team members and manage access.'],
-            ['/settings/webhooks', 'Register outbound webhook endpoints.'],
-          ]} />
-        </Section>
-        <Section title="Default Preferences">
-          <p>Under Settings, you can set your personal defaults for new scenarios — default niche, palette, and AI image tool. These are stored per-user and pre-fill the New Scenario form.</p>
-        </Section>
-      </div>
-    ),
-  },
-
-  faq: {
-    title: 'FAQ',
-    content: (
-      <div className="space-y-8">
-        <Section title="Frequently Asked Questions">
-          <div className="space-y-5">
-            {[
-              {
-                q: 'Where are videos hosted?',
-                a: 'Veank Studio does not use any third-party video hosting. Videos are served from Supabase Storage or any CDN you choose. The file URL is stored and played via a native HTML5 <video> element.',
-              },
-              {
-                q: 'What AI models are used for script/prompt generation?',
-                a: 'Scripts and prompts are generated by Claude (Anthropic API). Image prompts are designed to be used with Midjourney or DALL-E — the AI tool per-scene is configurable.',
-              },
-              {
-                q: 'Is the public /watch page behind login?',
-                a: 'No. /watch and /watch/[id] are fully public — no authentication required. Only scenarios marked as public appear there.',
-              },
-              {
-                q: 'Can I have multiple brands on one account?',
-                a: 'Yes. You can create as many brands as you like. Each brand has its own theme, niches, palettes, and can have different team members.',
-              },
-              {
-                q: 'How does the calendar work?',
-                a: 'The calendar shows all scenarios that have a publish_date set on their video record. It is a read-only monthly view — dates are set on the Video tab of each scenario.',
-              },
-              {
-                q: 'What image formats are supported for graphics?',
-                a: 'JPG, PNG, and WebP. Files are stored in Supabase Storage under graphics/[scenario-id]/.',
-              },
-              {
-                q: 'What happens when I delete a scenario?',
-                a: 'The scenario and all related records (script, prompts, graphics, video, comments, activity) are deleted. Graphics files in Supabase Storage are also removed.',
-              },
-              {
-                q: 'Can editors publish scenarios?',
-                a: 'Yes — changing status to published is not restricted to admins. However, toggling a scenario public (Public Settings) can be done by any authenticated user who can access the scenario.',
-              },
-            ].map(({ q, a }) => (
-              <div key={q} className="border-b border-white/[0.05] pb-5 last:border-0">
-                <p className="text-[13px] font-semibold text-white mb-2">{q}</p>
-                <p className="text-[13px] text-brand-300 leading-relaxed">{a}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
-    ),
-  },
-}
+// ── Helper components ────────────────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="mb-8">
       <h2 className="text-[15px] font-semibold text-white mb-3 pb-2 border-b border-white/[0.06]">{title}</h2>
-      <div className="text-[13px] text-brand-300 leading-relaxed space-y-3">{children}</div>
+      <div className="text-[13px] text-brand-300 leading-relaxed space-y-2">{children}</div>
     </div>
   )
 }
 
 function Table({ rows }: { rows: [string, string][] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-white/[0.07] mt-2">
+    <div className="rounded-xl border border-white/[0.07] overflow-hidden my-3">
       {rows.map(([k, v], i) => (
-        <div key={i} className={`flex gap-0 ${i % 2 === 0 ? 'bg-white/[0.02]' : 'bg-transparent'}`}>
-          <div className="w-44 shrink-0 px-4 py-2.5 border-r border-white/[0.06]">
-            <code className="text-[11px] text-accent/90 font-mono">{k}</code>
-          </div>
-          <div className="px-4 py-2.5 text-[12px] text-brand-300">{v}</div>
+        <div key={i} className={`flex gap-4 px-4 py-2.5 text-[12px] ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+          <span className="text-white/50 font-mono shrink-0 w-36">{k}</span>
+          <span className="text-brand-300">{v}</span>
         </div>
       ))}
     </div>
   )
 }
 
-function Steps({ steps }: { steps: { n: string; label: string; desc: string }[] }) {
+function Steps({ items }: { items: string[] }) {
   return (
-    <div className="space-y-3 mt-2">
-      {steps.map(s => (
-        <div key={s.n} className="flex gap-4">
-          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 mt-0.5">
-            <span className="text-[10px] font-bold text-accent font-mono">{s.n}</span>
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold text-white">{s.label}</p>
-            <p className="text-[12px] text-brand-400 mt-0.5">{s.desc}</p>
-          </div>
-        </div>
+    <ol className="space-y-2 my-3">
+      {items.map((item, i) => (
+        <li key={i} className="flex gap-3 text-[13px] text-brand-300">
+          <span className="w-5 h-5 rounded-full bg-accent/15 border border-accent/20 text-accent text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+          <span>{item}</span>
+        </li>
       ))}
-    </div>
+    </ol>
   )
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// ── Doc content ──────────────────────────────────────────────────────────────
+
+const docs: Record<string, { title: string; content: React.ReactNode }> = {
+  overview: {
+    title: 'Platform Overview',
+    content: (
+      <>
+        <Section title="What is Veank Studio?">
+          <p>Veank Studio is an internal production platform for creating cinematic short-form finance and education videos. It manages the entire pipeline from scriptwriting to publishing — covering scripts, AI image prompts, graphics, video files, and public watch pages.</p>
+        </Section>
+        <Section title="Core concepts">
+          <Table rows={[
+            ['Scenario', 'A single video project — the atomic unit of the platform'],
+            ['Brand', 'A YouTube/social channel identity with its own theme and niches'],
+            ['Niche', 'A topic category within a brand (e.g. crypto, real-estate)'],
+            ['Script', 'The written content for a scenario, broken into scenes'],
+            ['Prompt', 'An AI image prompt generated per scene'],
+            ['Graphic', 'A rendered image frame uploaded for the storyboard'],
+            ['Video', 'The final rendered video file attached to a scenario'],
+            ['Public page', 'A shareable /watch URL showing the storyboard and video'],
+          ]} />
+        </Section>
+        <Section title="End-to-end workflow">
+          <Steps items={[
+            'Create a brand with a name, accent colour, and channel niches',
+            'Create a new scenario within a brand — give it a title, hook, and niche',
+            'Write or AI-generate the video script with structured scenes',
+            'Generate AI prompts for each scene (Midjourney / DALL-E)',
+            'Upload the rendered graphic frames to the storyboard',
+            'Attach the final rendered video file',
+            'Enable the public watch page and share the /watch link',
+          ]} />
+        </Section>
+      </>
+    ),
+  },
+  scenarios: {
+    title: 'Scenarios',
+    content: (
+      <>
+        <Section title="What is a scenario?">
+          <p>A scenario is a single video production project. It tracks the title, hook (one-line description), niche, status, and all associated assets (script, graphics, video).</p>
+        </Section>
+        <Section title="Status lifecycle">
+          <Table rows={[
+            ['draft', 'Initial state — scenario is being planned'],
+            ['scripting', 'Script is actively being written'],
+            ['prompting', 'AI image prompts are being generated'],
+            ['rendering', 'Graphics are being created from prompts'],
+            ['editing', 'Video is in post-production'],
+            ['published', 'Video is live and publicly visible'],
+          ]} />
+        </Section>
+        <Section title="Creating a scenario">
+          <Steps items={[
+            'Go to Scenarios → New Story',
+            'Enter a compelling title and one-line hook',
+            'Select the brand and niche',
+            'Save — the scenario starts in "draft" status',
+            'Progress through statuses as work is completed',
+          ]} />
+        </Section>
+        <Section title="Assignments">
+          <p>Scenarios can be assigned to team members. The assigned user sees their scenarios highlighted in the dashboard. Admins can reassign at any time.</p>
+        </Section>
+      </>
+    ),
+  },
+  scripts: {
+    title: 'Scripts',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>Each scenario can have one script. Scripts are plain text with scene separators. The script body is displayed on the public watch page if enabled.</p>
+        </Section>
+        <Section title="Script structure">
+          <p>Scripts are free-form text. Recommended structure is to separate visual scenes with double line breaks and label each scene (e.g. "SCENE 01 — HOOK"). This maps one-to-one with AI prompt generation.</p>
+        </Section>
+        <Section title="Writing tips">
+          <Steps items={[
+            'Open a scenario and go to the Script tab',
+            'Write scene-by-scene — each scene becomes one graphic frame',
+            'Keep each scene description concise (2-4 sentences)',
+            'Include visual cues for the AI prompt generator',
+            'Save frequently — changes are stored immediately',
+          ]} />
+        </Section>
+        <Section title="Visibility">
+          <p>Script visibility on the public watch page is controlled per-scenario via Public Settings. When enabled, the full script body is rendered on the /watch page.</p>
+        </Section>
+      </>
+    ),
+  },
+  prompts: {
+    title: 'AI Prompts',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>AI prompts are Midjourney or DALL-E image generation prompts created for each visual scene in the script. Each scenario stores one prompt per scene.</p>
+        </Section>
+        <Section title="Prompt fields">
+          <Table rows={[
+            ['scene_index', 'Which scene this prompt belongs to (0-based)'],
+            ['body', 'The full prompt text sent to the image generator'],
+            ['style_suffix', 'Optional style modifiers appended to every prompt'],
+            ['status', 'draft | approved | rejected'],
+          ]} />
+        </Section>
+        <Section title="Generating prompts">
+          <Steps items={[
+            'Navigate to a scenario → Prompts tab',
+            'Click "Generate All" to create prompts from the script scenes',
+            'Review and edit each prompt individually',
+            'Approve prompts before sending to image generation',
+            'Copy approved prompts into Midjourney or your image tool',
+          ]} />
+        </Section>
+        <Section title="Style suffixes">
+          <p>A global style suffix can be set at the brand level (e.g. "--ar 9:16 --stylize 750 --v 6"). This is automatically appended to every generated prompt for consistent visual style.</p>
+        </Section>
+      </>
+    ),
+  },
+  graphics: {
+    title: 'Graphics & Storyboard',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>Graphics are the rendered image frames that make up the visual storyboard of a scenario. They are uploaded after AI image generation and displayed in a lightbox grid on the public watch page.</p>
+        </Section>
+        <Section title="Uploading graphics">
+          <Steps items={[
+            'Go to a scenario → Graphics tab',
+            'Drag and drop or browse to select image files',
+            'Files are uploaded to Supabase Storage automatically',
+            'Each graphic is assigned a sort_order for the storyboard sequence',
+            'Reorder frames by dragging them into position',
+          ]} />
+        </Section>
+        <Section title="Storyboard lightbox">
+          <p>On the public /watch page, graphics appear in a responsive 2-3 column grid. Clicking any frame opens a full-screen lightbox with keyboard navigation (← → Escape).</p>
+        </Section>
+        <Section title="Supported formats">
+          <Table rows={[
+            ['JPEG / JPG', 'Recommended for photographs and rendered images'],
+            ['PNG', 'Supported — use for images with transparency'],
+            ['WebP', 'Supported — smaller file size'],
+          ]} />
+        </Section>
+      </>
+    ),
+  },
+  videos: {
+    title: 'Videos',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>The video record stores the final rendered video file and platform publishing information for a scenario. Only one video per scenario is supported.</p>
+        </Section>
+        <Section title="Video fields">
+          <Table rows={[
+            ['file_url', 'Direct URL to the self-hosted video file'],
+            ['status', 'draft | published'],
+            ['publish_date', 'Scheduled or actual publish date'],
+            ['platform_urls', 'JSON object of platform links (youtube, tiktok, reels)'],
+          ]} />
+        </Section>
+        <Section title="Attaching a video">
+          <Steps items={[
+            'Go to a scenario → Video tab',
+            'Enter or upload the video file URL',
+            'Set status to "published" when the video is live',
+            'Add platform URLs for YouTube, TikTok, and Instagram Reels',
+            'Platform links appear on the public watch page as action buttons',
+          ]} />
+        </Section>
+        <Section title="Video visibility">
+          <p>The video player is only shown on the public page when show_video is enabled in Public Settings AND the scenario status is "published". This prevents accidental early exposure.</p>
+        </Section>
+      </>
+    ),
+  },
+  brands: {
+    title: 'Brands & Channels',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>A brand represents a YouTube channel or social media identity. Each brand has its own visual theme, accent colour, supported niches, and scenarios.</p>
+        </Section>
+        <Section title="Brand fields">
+          <Table rows={[
+            ['name', 'Display name of the brand / channel'],
+            ['slug', 'URL-safe identifier used in routes'],
+            ['accent', 'Primary accent colour (hex) for UI and public pages'],
+            ['niches', 'Array of content categories this brand covers'],
+            ['logo_url', 'Optional brand logo image URL'],
+          ]} />
+        </Section>
+        <Section title="Creating a brand">
+          <Steps items={[
+            'Go to Settings → Brands',
+            'Click "New Brand" and enter the channel name',
+            'Choose an accent colour that matches the channel identity',
+            'Add the niches this brand covers',
+            'Save — you can now create scenarios under this brand',
+          ]} />
+        </Section>
+        <Section title="Multi-brand workflow">
+          <p>All scenarios are scoped to a brand. The scenario list can be filtered by brand. Team members can have different access levels per brand (coming soon).</p>
+        </Section>
+      </>
+    ),
+  },
+  public: {
+    title: 'Public Watch Page',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>Each scenario can have a publicly accessible watch page at /watch/[id]. This page shows the video, storyboard, script, and platform links based on per-scenario visibility settings.</p>
+        </Section>
+        <Section title="Public settings">
+          <Table rows={[
+            ['is_public', 'Master switch — disabling hides the page entirely (404)'],
+            ['show_video', 'Show the video player (only if status = published)'],
+            ['show_graphics', 'Show the storyboard image grid and lightbox'],
+            ['show_script', 'Show the full script body'],
+            ['show_platform_links', 'Show YouTube / TikTok / Reels action buttons'],
+          ]} />
+        </Section>
+        <Section title="Enabling the public page">
+          <Steps items={[
+            'Open a scenario → Public tab',
+            'Toggle "Make Public" to enable the watch page',
+            'Enable or disable individual content sections',
+            'Copy the /watch/[id] URL to share with viewers',
+          ]} />
+        </Section>
+        <Section title="SEO">
+          <p>The public watch page generates OpenGraph and Twitter Card meta tags using the scenario title and hook. The first graphic frame is used as the OG image fallback.</p>
+        </Section>
+      </>
+    ),
+  },
+  team: {
+    title: 'Team & Roles',
+    content: (
+      <>
+        <Section title="Roles">
+          <Table rows={[
+            ['admin', 'Full access — manage brands, invite users, delete anything'],
+            ['editor', 'Create and edit scenarios, upload assets, manage own work'],
+          ]} />
+        </Section>
+        <Section title="Inviting team members">
+          <Steps items={[
+            'Go to Settings → Team',
+            'Enter the email address of the new team member',
+            'Select their role (admin or editor)',
+            'Send the invitation — they receive an email to set a password',
+            'They can log in immediately after accepting',
+          ]} />
+        </Section>
+        <Section title="Scenario assignment">
+          <p>Scenarios can be assigned to any team member. Editors see their assigned scenarios highlighted. Admins can view and manage all scenarios regardless of assignment.</p>
+        </Section>
+        <Section title="Removing access">
+          <p>Admins can revoke a team member's access from the Team settings page. The user's scenarios are not deleted — they remain unassigned and accessible to admins.</p>
+        </Section>
+      </>
+    ),
+  },
+  webhooks: {
+    title: 'Webhooks',
+    content: (
+      <>
+        <Section title="Overview">
+          <p>Webhooks let you receive real-time POST notifications when scenario events occur. Payloads are HMAC-SHA256 signed so you can verify authenticity.</p>
+        </Section>
+        <Section title="Available events">
+          <Table rows={[
+            ['scenario.created', 'Fired when a new scenario is created'],
+            ['scenario.updated', 'Fired when scenario fields or status change'],
+            ['scenario.published', 'Fired when status transitions to "published"'],
+            ['video.attached', 'Fired when a video file is attached or replaced'],
+            ['graphics.uploaded', 'Fired when new graphic frames are uploaded'],
+          ]} />
+        </Section>
+        <Section title="Payload structure">
+          <p>Every webhook POST includes:</p>
+          <Table rows={[
+            ['event', 'The event name (e.g. scenario.published)'],
+            ['scenario_id', 'UUID of the affected scenario'],
+            ['timestamp', 'ISO 8601 timestamp of the event'],
+            ['data', 'Full scenario object at time of event'],
+          ]} />
+        </Section>
+        <Section title="Signature verification">
+          <p>Each request includes an <code className="text-accent font-mono text-[12px]">X-Veank-Signature</code> header containing HMAC-SHA256 of the raw body using your webhook secret. Always verify this before processing.</p>
+        </Section>
+        <Section title="Setting up a webhook">
+          <Steps items={[
+            'Go to Settings → Webhooks',
+            'Enter your endpoint URL (must be HTTPS)',
+            'Select which events to subscribe to',
+            'Copy the generated secret and store it securely',
+            'Deploy your endpoint and verify test deliveries',
+          ]} />
+        </Section>
+      </>
+    ),
+  },
+  settings: {
+    title: 'Settings',
+    content: (
+      <>
+        <Section title="Profile settings">
+          <p>Update your display name, email address, and password from Settings → Profile. Email changes require re-confirmation via the new address.</p>
+        </Section>
+        <Section title="Brand settings">
+          <Table rows={[
+            ['Name & slug', 'Display name and URL identifier for the brand'],
+            ['Accent colour', 'Primary colour used across the UI and public page'],
+            ['Niches', 'Content categories — add or remove as the brand evolves'],
+            ['Logo', 'Optional brand logo shown in embeds and OG images'],
+            ['Style suffix', 'Default Midjourney style suffix for all prompts'],
+          ]} />
+        </Section>
+        <Section title="Team settings">
+          <p>Invite, manage, and remove team members. See the Team & Roles doc for details.</p>
+        </Section>
+        <Section title="Webhook settings">
+          <p>Create and manage webhook subscriptions. See the Webhooks doc for details.</p>
+        </Section>
+        <Section title="Notification preferences">
+          <p>Control which in-app and email notifications you receive — scenario assignments, status changes, and new comments (coming soon).</p>
+        </Section>
+      </>
+    ),
+  },
+  faq: {
+    title: 'FAQ',
+    content: (
+      <>
+        <Section title="Where are videos and images hosted?">
+          <p>All files are stored in Supabase Storage (S3-compatible). Files are served via a public CDN URL. There are no per-file bandwidth fees within the Supabase plan limits.</p>
+        </Section>
+        <Section title="Which AI image tools are supported?">
+          <p>The prompt generator produces text prompts compatible with Midjourney v6, DALL-E 3, and Stable Diffusion. The tool itself does not call any AI image API — you copy the generated prompts into your preferred tool manually.</p>
+        </Section>
+        <Section title="Can multiple people edit the same scenario?">
+          <p>Yes. There is no locking mechanism — last write wins. Coordinate with your team to avoid conflicting edits on the same scenario simultaneously.</p>
+        </Section>
+        <Section title="How many brands / scenarios can I create?">
+          <p>There are no hard limits within the app. Practical limits come from your Supabase storage quota and database row count on the chosen plan.</p>
+        </Section>
+        <Section title="Is the public watch page indexed by search engines?">
+          <p>Yes — the /watch pages render server-side with full meta tags and are crawlable. If you want a scenario kept private, ensure is_public is disabled.</p>
+        </Section>
+        <Section title="Can I export my data?">
+          <p>You can export scenarios as CSV from the scenarios list (coming soon). Raw database exports are available via the Supabase dashboard for the project owner.</p>
+        </Section>
+        <Section title="What happens if I delete a scenario?">
+          <p>Deletion is permanent. The scenario record, all associated scripts, prompts, graphics references, and video references are removed. Uploaded files in storage are not automatically deleted — clean them up manually from the Supabase storage dashboard.</p>
+        </Section>
+      </>
+    ),
+  },
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const doc = docs[slug]
   return { title: doc ? `${doc.title} — Docs` : 'Not Found' }
 }
 
-export default async function DocPage({ params }: Props) {
+export default async function DocPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const doc = docs[slug]
   if (!doc) notFound()
-
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/docs"
-        className="inline-flex items-center gap-2 text-[12px] text-brand-400 hover:text-brand-200 transition-colors mb-6">
-        <ChevronLeft size={14} />
-        All Docs
+      <Link href="/docs" className="inline-flex items-center gap-2 text-[12px] text-brand-400 hover:text-brand-200 transition-colors mb-6">
+        <ChevronLeft size={14} />All Docs
       </Link>
-
       <h1 className="text-2xl font-bold text-white tracking-tight mb-8">{doc.title}</h1>
-
       {doc.content}
     </div>
   )
