@@ -8,6 +8,7 @@ export interface SessionPayload {
   email: string
   name: string
   role: string
+  exp?: number
 }
 
 async function getKey(): Promise<CryptoKey> {
@@ -41,14 +42,16 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
     const sigBytes = new Uint8Array(sigHex.match(/.{2}/g)!.map(h => parseInt(h, 16)))
     const valid = await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(encoded))
     if (!valid) return null
-    return JSON.parse(Buffer.from(encoded, 'base64url').toString()) as SessionPayload
+    const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString()) as SessionPayload
+    if (payload.exp && Date.now() / 1000 > payload.exp) return null
+    return payload
   } catch {
     return null
   }
 }
 
 export async function setSession(payload: SessionPayload) {
-  const token = await createSessionToken(payload)
+  const token = await createSessionToken({ ...payload, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 })
   const cookieStore = await cookies()
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -63,7 +66,12 @@ export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE)?.value
   if (!token) return null
-  return verifySessionToken(token)
+  const payload = await verifySessionToken(token)
+  if (!payload) return null
+  if (payload.exp && payload.exp - Date.now() / 1000 < 60 * 60 * 24 * 3) {
+    await setSession(payload)
+  }
+  return payload
 }
 
 export async function clearSession() {

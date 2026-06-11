@@ -162,6 +162,7 @@ export async function assignScenario(
     if (assignee?.email && scenario?.title) {
       await sendAssignmentNotification(assignee.email, session?.name ?? 'Someone', scenario.title, scenarioId)
     }
+    import('@/lib/webhook').then(m => m.fireWebhook('scenario.assigned', { id: scenarioId, assigned_to: assignedTo }))
   }
   revalidatePath(`/scenarios/${scenarioId}`)
   return { success: true, data: undefined }

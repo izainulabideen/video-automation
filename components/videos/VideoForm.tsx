@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { upsertVideo } from '@/actions/videos'
 import { VIDEO_STATUS_OPTIONS } from '@/lib/constants'
+import { useToast } from '@/components/shared/Toast'
 import type { Database } from '@/types/database'
 
 type Video = Database['public']['Tables']['videos']['Row']
@@ -9,11 +10,17 @@ type Video = Database['public']['Tables']['videos']['Row']
 export function VideoForm({ scenarioId, video }: { scenarioId: string; video?: Video }) {
   const [saving, setSaving] = useState(false)
   const platforms = video?.platform_urls as Record<string, string> | null
+  const { toast } = useToast()
 
   async function handleSubmit(fd: FormData) {
     setSaving(true)
-    await upsertVideo(scenarioId, fd)
+    const result = await upsertVideo(scenarioId, fd)
     setSaving(false)
+    if (result.success) {
+      toast('Video saved')
+    } else {
+      toast(result.error ?? 'Failed to save video', 'error')
+    }
   }
 
   return (
