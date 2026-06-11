@@ -1,6 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   DndContext,
   closestCenter,
@@ -77,9 +78,8 @@ function SortableItem({
             </div>
           </>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={g.file_url} alt={g.file_name}
-            className="w-full h-full object-cover" />
+          <Image src={g.file_url} alt={g.file_name} fill sizes="(max-width: 768px) 50vw, 200px"
+            className="object-cover" />
         )}
 
         {/* Cover badge */}

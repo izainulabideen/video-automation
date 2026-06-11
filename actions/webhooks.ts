@@ -10,6 +10,26 @@ export async function getWebhooks() {
   return data ?? []
 }
 
+export interface WebhookDelivery {
+  id: string
+  event: string
+  url: string
+  status_code: number | null
+  success: boolean
+  error: string | null
+  created_at: string
+}
+
+export async function getWebhookDeliveries(): Promise<WebhookDelivery[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('webhook_deliveries')
+    .select('id, event, url, status_code, success, error, created_at')
+    .order('created_at', { ascending: false })
+    .limit(25)
+  return (data as unknown as WebhookDelivery[] | null) ?? []
+}
+
 export async function createWebhook(fd: FormData): Promise<ActionResult> {
   const session = await getSession()
   if (session?.role !== 'admin') return { success: false, error: 'Admin only' }

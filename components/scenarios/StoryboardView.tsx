@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { Film, ImageIcon, Hash } from 'lucide-react'
 
 type Prompt = {
@@ -36,8 +37,8 @@ function MediaThumb({ g }: { g: Graphic }) {
           </div>
         </>
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={g.file_url} alt={g.file_name} className="w-full h-full object-cover" />
+        <Image src={g.file_url} alt={g.file_name} fill sizes="(max-width: 768px) 50vw, 200px"
+          className="object-cover" />
       )}
       <p className="absolute bottom-0 left-0 right-0 text-[9px] text-white/70 bg-black/60 px-1.5 py-1 truncate">
         {g.file_name}

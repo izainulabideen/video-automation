@@ -80,6 +80,11 @@ export default async function CalendarPage({ searchParams }: Props) {
           <p className="text-xs text-brand-400 mt-0.5">Due dates and publish schedules</p>
         </div>
       </div>
+      {events.length === 0 && (
+        <p className="text-[13px] text-brand-400 mb-4">
+          Nothing scheduled this month. Set a due date on a scenario or a publish date on a video and it will appear here.
+        </p>
+      )}
       <CalendarGrid year={year} month={month} events={events} />
     </div>
   )
